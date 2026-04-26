@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Model Kit Inventory</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;500;700&display=swap');
+
+  :root {
+    --bg-deep: #eef2f7;
+    --bg-panel: #ffffff;
+    --bg-card: #f4f7fb;
+    --bg-row: #ffffff;
+    --bg-row-alt: #f8fafd;
+    --accent-cyan: #0077aa;
+    --accent-cyan-dim: #0077aa22;
+    --accent-amber: #b06000;
+    --accent-amber-dim: #b0600018;
+    --accent-red: #cc1e3a;
+    --accent-green: #007a50;
+    --accent-green-dim: #007a5018;
+    --text-primary: #1a2a3a;
+    --text-secondary: #4a6680;
+    --text-muted: #8aaabb;
+    --border-cyan: #0077aa33;
+    --border-panel: #c8d8e8;
+    --hud-line: #0077aa12;
+    --danger: #cc1e3a;
+    --success: #007a50;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Exo 2', sans-serif;
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      repeating-linear-gradient(0deg, transparent, transparent 39px, var(--hud-line) 39px, var(--hud-line) 40px),
+      repeating-linear-gradient(90deg, transparent, transparent 79px, var(--hud-line) 79px, var(--hud-line) 80px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .scanline {
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(transparent, transparent 2px, rgba(0,100,160,0.018) 2px, rgba(0,100,160,0.018) 4px);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 2;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 24px 60px;
+  }
+
+  /* HEADER */
+  header {
+    padding: 32px 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    border-bottom: 1px solid var(--border-cyan);
+    margin-bottom: 28px;
+  }
+
+  .logo-block {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .logo-main {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: 6px;
+    color: var(--accent-cyan);
+    line-height: 1;
+  }
+
+  .logo-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+  }
+
+  .header-decoration {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow: hidden;
+  }
+
+  .hdec-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--border-cyan), transparent);
+  }
+
+  .hdec-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .system-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-green);
+  }
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent-green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* TOOLBAR */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .toolbar-divider {
+    width: 1px;
+    height: 32px;
+    background: var(--border-panel);
+  }
+
+  .btn {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    border: 1px solid;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: currentColor;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .btn:hover::before { opacity: 0.08; }
+  .btn:active { transform: scale(0.98); }
+
+  .btn-primary {
+    background: transparent;
+    border-color: var(--accent-cyan);
+    color: var(--accent-cyan);
+  }
+
+  .btn-primary:hover {
+    background: var(--accent-cyan-dim);
+  }
+
+  .btn-amber {
+    background: transparent;
+    border-color: var(--accent-amber);
+    color: var(--accent-amber);
+  }
+
+  .btn-amber:hover {
+    background: var(--accent-amber-dim);
+  }
+
+  .btn-green {
+    background: transparent;
+    border-color: var(--accent-green);
+    color: var(--accent-green);
+  }
+
+  .btn-green:hover {
+    background: var(--accent-green-dim);
+  }
+
+  .btn-danger {
+    background: transparent;
+    border-color: var(--accent-red);
+    color: var(--accent-red);
+  }
+
+  .btn-sm {
+    padding: 5px 10px;
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+
+  .btn-icon {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 2px;
+  }
+
+  /* SEARCH */
+  .search-wrap {
+    flex: 1;
+    min-width: 160px;
+    position: relative;
+  }
+
+  .search-wrap input {
+    width: 100%;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-panel);
+    border-radius: 2px;
+    color: var(--text-primary);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    padding: 8px 12px 8px 32px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .search-wrap input:focus { border-color: var(--accent-cyan); }
+
+  .search-wrap input::placeholder { color: var(--text-muted); }
+
+  .search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  /* TABLE */
+  .table-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-panel);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .table-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+    opacity: 0.5;
+  }
+
+  .table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border-panel);
+  }
+
+  .table-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 2px;
+  }
+
+  .table-count {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-cyan);
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .data-table thead th {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-panel);
+    background: var(--bg-card);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.15s;
+  }
+
+  .data-table thead th:hover { color: var(--accent-cyan); }
+
+  .data-table thead th.sort-asc::after { content: ' ↑'; color: var(--accent-cyan); }
+  .data-table thead th.sort-desc::after { content: ' ↓'; color: var(--accent-cyan); }
+
+  .data-table tbody tr {
+    border-bottom: 1px solid var(--hud-line);
+    transition: background 0.1s;
+  }
+
+  .data-table tbody tr:nth-child(even) { background: var(--bg-row-alt); }
+  .data-table tbody tr:hover { background: var(--accent-cyan-dim); }
+
+  .data-table tbody td {
+    padding: 10px 14px;
+    color: var(--text-primary);
+    vertical-align: middle;
+  }
+
+  .td-no {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    width: 48px;
+  }
+
+  .td-brand {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .brand-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 1px;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    border: 1px solid;
+  }
+
+  .brand-bandai { border-color: #0077aa66; color: #005a88; background: #0077aa10; }
+  .brand-kotobukiya { border-color: #b0600066; color: #8a4a00; background: #b0600010; }
+  .brand-hasegawa { border-color: #007a5066; color: #005a38; background: #007a5010; }
+  .brand-wave { border-color: #7000bb66; color: #580099; background: #7000bb10; }
+  .brand-other { border-color: #44444466; color: #444444; background: #44444410; }
+
+  .td-model { max-width: 260px; }
+
+  .td-scale {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  .td-units {
+    font-family: 'Share Tech Mono', monospace;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .td-price {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--accent-amber);
+    text-align: right;
+  }
+
+  .td-actions {
+    width: 90px;
+    white-space: nowrap;
+  }
+
+  .td-actions-inner {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+  }
+
+  .empty-icon {
+    font-size: 40px;
+    margin-bottom: 16px;
+    opacity: 0.3;
+  }
+
+  .empty-text {
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--text-muted);
+    font-size: 12px;
+    letter-spacing: 2px;
+  }
+
+  /* TOTALS */
+  .totals-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-top: 16px;
+  }
+
+  .stat-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-panel);
+    border-radius: 2px;
+    padding: 16px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .stat-card.cyan::after { background: var(--accent-cyan); }
+  .stat-card.amber::after { background: var(--accent-amber); }
+  .stat-card.green::after { background: var(--accent-green); }
+
+  .stat-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .stat-card.cyan .stat-value { color: var(--accent-cyan); }
+  .stat-card.amber .stat-value { color: var(--accent-amber); }
+  .stat-card.green .stat-value { color: var(--accent-green); }
+
+  /* MODAL */
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-backdrop.open { display: flex; }
+
+  .modal {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-cyan);
+    border-radius: 2px;
+    width: 100%;
+    max-width: 520px;
+    margin: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .modal::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+  }
+
+  .modal-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border-panel);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .modal-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent-cyan);
+  }
+
+  .modal-close {
+    background: none;
+    border: 1px solid var(--border-panel);
+    color: var(--text-muted);
+    width: 28px;
+    height: 28px;
+    border-radius: 2px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+
+  .modal-close:hover { border-color: var(--accent-red); color: var(--accent-red); }
+
+  .modal-body { padding: 20px 24px; }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .form-full { grid-column: 1 / -1; }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .form-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  .form-input, .form-select {
+    background: var(--bg-card);
+    border: 1px solid var(--border-panel);
+    border-radius: 2px;
+    color: var(--text-primary);
+    font-family: 'Exo 2', sans-serif;
+    font-size: 13px;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+
+  .form-input:focus, .form-select:focus { border-color: var(--accent-cyan); }
+  .form-input::placeholder { color: var(--text-muted); }
+
+  .form-select option { background: var(--bg-panel); }
+
+  .modal-footer {
+    padding: 16px 24px 20px;
+    border-top: 1px solid var(--border-panel);
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+
+  /* SYNC MODAL */
+  .sync-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-panel);
+  }
+
+  .sync-tab {
+    flex: 1;
+    padding: 12px 16px;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+
+  .sync-tab.active { color: var(--accent-cyan); border-bottom-color: var(--accent-cyan); }
+
+  .sync-panel { display: none; }
+  .sync-panel.active { display: block; }
+
+  .code-display {
+    background: var(--bg-deep);
+    border: 1px solid var(--border-panel);
+    border-radius: 2px;
+    padding: 14px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-cyan);
+    word-break: break-all;
+    line-height: 1.6;
+    max-height: 120px;
+    overflow-y: auto;
+    margin-bottom: 12px;
+  }
+  .sync-note {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+
+  .sync-note a {
+    color: var(--accent-cyan);
+    text-decoration: none;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: #ffffff;
+    border: 1px solid var(--accent-green);
+    border-radius: 2px;
+    padding: 12px 18px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--accent-green);
+    z-index: 999;
+    transform: translateY(20px);
+    opacity: 0;
+    transition: all 0.3s;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  }
+
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.error { border-color: var(--accent-red); color: var(--accent-red); }
+
+  /* CORNER DECORATIONS */
+  .corner-deco {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+  }
+
+  .corner-deco.tl { top: -1px; left: -1px; border-top: 2px solid var(--accent-cyan); border-left: 2px solid var(--accent-cyan); }
+  .corner-deco.tr { top: -1px; right: -1px; border-top: 2px solid var(--accent-cyan); border-right: 2px solid var(--accent-cyan); }
+  .corner-deco.bl { bottom: -1px; left: -1px; border-bottom: 2px solid var(--accent-cyan); border-left: 2px solid var(--accent-cyan); }
+  .corner-deco.br { bottom: -1px; right: -1px; border-bottom: 2px solid var(--accent-cyan); border-right: 2px solid var(--accent-cyan); }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg-deep); }
+  ::-webkit-scrollbar-thumb { background: #b0c8d8; border-radius: 0; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent-cyan); }
+
+  .table-wrap { overflow-x: auto; }
+
+  @media (max-width: 768px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .toolbar { gap: 8px; }
+    .logo-main { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+<div class="scanline"></div>
+<div class="wrapper">
+
+  <header>
+    <div class="logo-block">
+      <div class="logo-main">MODEL KIT INVENTORY</div>
+      <div class="logo-sub">Collection Management System v2.0</div>
+    </div>
+    <div class="header-decoration">
+      <div class="hdec-line"></div>
+      <div class="hdec-label">DATA LINK ACTIVE</div>
+      <div class="hdec-line" style="max-width:60px;"></div>
+    </div>
+    <div class="system-status">
+      <div class="status-dot"></div>
+      <span>SYS ONLINE</span>
+    </div>
+  </header>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <div class="toolbar-group">
+      <button class="btn btn-primary" onclick="openAddModal()">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/></svg>
+        ADD UNIT
+      </button>
+    </div>
+    <div class="toolbar-divider"></div>
+    <div class="toolbar-group">
+      <button class="btn btn-amber" onclick="downloadTemplate()">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v7M3 6l3 3 3-3M1 10h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/></svg>
+        XLS TEMPLATE
+      </button>
+      <label class="btn btn-amber" style="cursor:pointer;">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 8V1M3 4l3-3 3 3M1 10h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/></svg>
+        IMPORT XLS
+        <input type="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="importExcel(event)">
+      </label>
+    </div>
+    <div class="toolbar-divider"></div>
+    <div class="toolbar-group">
+      <button class="btn btn-green" onclick="openSyncModal()">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 6a5 5 0 0 1 9-3M11 6a5 5 0 0 1-9 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/><path d="M9 1l1 2-2 1M3 8l-1 2 2 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/></svg>
+        SYNC
+      </button>
+    </div>
+    <div class="toolbar-divider"></div>
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="searchInput" placeholder="SEARCH MODEL / BRAND..." oninput="renderTable()">
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-panel" style="position:relative;">
+    <div class="corner-deco tl"></div>
+    <div class="corner-deco tr"></div>
+    <div class="corner-deco bl"></div>
+    <div class="corner-deco br"></div>
+    <div class="table-header">
+      <div class="table-title">// INVENTORY LOG</div>
+      <div class="table-count" id="tableCount">UNITS: 0</div>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table" id="dataTable">
+        <thead>
+          <tr>
+            <th class="td-no" onclick="sortBy('no')">#</th>
+            <th onclick="sortBy('brand')">BRAND</th>
+            <th onclick="sortBy('model')">MODEL DESIGNATION</th>
+            <th onclick="sortBy('scale')">SCALE</th>
+            <th onclick="sortBy('units')" style="text-align:center">UNITS</th>
+            <th onclick="sortBy('price')" style="text-align:right">PRICE (MYR)</th>
+            <th style="text-align:right">ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TOTALS -->
+  <div class="totals-bar" id="totalsBar">
+    <div class="stat-card cyan">
+      <div class="stat-label">// Total Kits</div>
+      <div class="stat-value" id="totalKits">0</div>
+    </div>
+    <div class="stat-card amber">
+      <div class="stat-label">// Total Units</div>
+      <div class="stat-value" id="totalUnits">0</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">// Backlog Value (MYR)</div>
+      <div class="stat-value" id="totalValue">0.00</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-backdrop" id="entryModal">
+  <div class="modal">
+    <div class="corner-deco tl"></div>
+    <div class="corner-deco tr"></div>
+    <div class="corner-deco bl"></div>
+    <div class="corner-deco br"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">ADD UNIT</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Brand</label>
+          <select class="form-select" id="fBrand">
+            <option value="Bandai">Bandai</option>
+            <option value="Kotobukiya">Kotobukiya</option>
+            <option value="Hasegawa">Hasegawa</option>
+            <option value="Wave">Wave</option>
+            <option value="Aoshima">Aoshima</option>
+            <option value="Fine Molds">Fine Molds</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Scale</label>
+          <select class="form-select" id="fScale">
+            <option value="1/144">1/144</option>
+            <option value="1/100">1/100</option>
+            <option value="1/60">1/60</option>
+            <option value="1/48">1/48</option>
+            <option value="1/35">1/35</option>
+            <option value="1/72">1/72</option>
+            <option value="Non-Scale">Non-Scale</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group form-full">
+          <label class="form-label">Model Designation</label>
+          <input class="form-input" type="text" id="fModel" placeholder="e.g. RX-78-2 Gundam Ver.Ka">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Units</label>
+          <input class="form-input" type="number" id="fUnits" min="1" value="1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Price (MYR)</label>
+          <input class="form-input" type="number" id="fPrice" min="0" step="0.01" placeholder="0.00">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()" style="border-color:var(--border-panel);color:var(--text-secondary)">CANCEL</button>
+      <button class="btn btn-primary" onclick="saveEntry()">SAVE ENTRY</button>
+    </div>
+  </div>
+</div>
+
+<!-- SYNC MODAL -->
+<div class="modal-backdrop" id="syncModal">
+  <div class="modal" style="max-width:600px;">
+    <div class="corner-deco tl"></div>
+    <div class="corner-deco tr"></div>
+    <div class="corner-deco bl"></div>
+    <div class="corner-deco br"></div>
+    <div class="modal-header">
+      <div class="modal-title">DATA SYNC</div>
+      <button class="modal-close" onclick="closeSyncModal()">✕</button>
+    </div>
+    <div class="sync-tabs">
+      <button class="sync-tab active" onclick="switchSyncTab('export')">EXPORT CODE</button>
+      <button class="sync-tab" onclick="switchSyncTab('import')">IMPORT CODE</button>
+    </div>
+    <div class="modal-body">
+      <div class="sync-panel active" id="syncExport">
+        <div class="sync-note">Copy this sync code and paste it on another device to transfer your backlog data.</div>
+        <div class="code-display" id="syncCodeDisplay"></div>
+        <button class="btn btn-primary" onclick="copySyncCode()" style="width:100%;justify-content:center;">
+          COPY SYNC CODE
+        </button>
+      </div>
+      <div class="sync-panel" id="syncImport">
+        <div class="sync-note">Paste a sync code from another device to load that backlog data. This will REPLACE your current data.</div>
+        <textarea class="form-input" id="syncCodeInput" rows="5" placeholder="PASTE SYNC CODE HERE..." style="resize:vertical;font-family:'Share Tech Mono',monospace;font-size:11px;"></textarea>
+        <div style="margin-top:12px;display:flex;gap:10px;">
+          <button class="btn btn-danger" onclick="importSyncCode()" style="flex:1;justify-content:center;">OVERWRITE &amp; LOAD</button>
+          <button class="btn btn-green" onclick="mergeSyncCode()" style="flex:1;justify-content:center;">MERGE &amp; APPEND</button>
+        </div>
+        <div class="sync-note" style="margin-top:10px;">
+          OVERWRITE replaces all data. MERGE adds new entries without removing existing ones.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let data = [];
+let editId = null;
+let sortKey = 'no';
+let sortDir = 1;
+
+const STORAGE_KEY = 'gunpla_backlog_v1';
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    data = raw ? JSON.parse(raw) : [];
+  } catch { data = []; }
+}
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+}
+
+function getBrandClass(brand) {
+  const b = (brand || '').toLowerCase();
+  if (b.includes('bandai')) return 'brand-bandai';
+  if (b.includes('kotobukiya')) return 'brand-kotobukiya';
+  if (b.includes('hasegawa')) return 'brand-hasegawa';
+  if (b.includes('wave')) return 'brand-wave';
+  return 'brand-other';
+}
+
+function renderTable() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  let rows = data.filter(d =>
+    (d.model || '').toLowerCase().includes(q) ||
+    (d.brand || '').toLowerCase().includes(q) ||
+    (d.scale || '').toLowerCase().includes(q)
+  );
+
+  rows.sort((a, b) => {
+    let va = a[sortKey] ?? '';
+    let vb = b[sortKey] ?? '';
+    if (sortKey === 'price' || sortKey === 'units') { va = +va; vb = +vb; }
+    if (va < vb) return -sortDir;
+    if (va > vb) return sortDir;
+    return 0;
+  });
+
+  const tbody = document.getElementById('tableBody');
+
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">◈</div><div class="empty-text">NO UNITS IN BACKLOG // ADD UNIT TO BEGIN</div></div></td></tr>`;
+  } else {
+    tbody.innerHTML = rows.map((d, i) => `
+      <tr>
+        <td class="td-no">${String(i + 1).padStart(3, '0')}</td>
+        <td><span class="brand-pill ${getBrandClass(d.brand)}">${d.brand}</span></td>
+        <td class="td-model">${escHtml(d.model)}</td>
+        <td class="td-scale">${d.scale}</td>
+        <td class="td-units" style="text-align:center">${d.units}</td>
+        <td class="td-price">RM ${parseFloat(d.price || 0).toFixed(2)}</td>
+        <td class="td-actions">
+          <div class="td-actions-inner">
+            <button class="btn btn-primary btn-sm btn-icon" onclick="openEditModal('${d.id}')" title="Edit">✎</button>
+            <button class="btn btn-danger btn-sm btn-icon" onclick="deleteEntry('${d.id}')" title="Delete">✕</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  document.getElementById('tableCount').textContent = `UNITS: ${rows.length} / ${data.length}`;
+
+  const totalKits = data.length;
+  const totalUnits = data.reduce((s, d) => s + (parseInt(d.units) || 0), 0);
+  const totalValue = data.reduce((s, d) => s + (parseFloat(d.price) || 0) * (parseInt(d.units) || 1), 0);
+
+  document.getElementById('totalKits').textContent = totalKits;
+  document.getElementById('totalUnits').textContent = totalUnits;
+  document.getElementById('totalValue').textContent = 'RM ' + totalValue.toFixed(2);
+
+  document.querySelectorAll('.data-table thead th').forEach(th => {
+    th.classList.remove('sort-asc', 'sort-desc');
+  });
+}
+
+function escHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function sortBy(key) {
+  if (sortKey === key) sortDir *= -1;
+  else { sortKey = key; sortDir = 1; }
+  renderTable();
+}
+
+function openAddModal() {
+  editId = null;
+  document.getElementById('modalTitle').textContent = 'ADD UNIT';
+  document.getElementById('fBrand').value = 'Bandai';
+  document.getElementById('fModel').value = '';
+  document.getElementById('fScale').value = '1/144';
+  document.getElementById('fUnits').value = 1;
+  document.getElementById('fPrice').value = '';
+  document.getElementById('entryModal').classList.add('open');
+}
+
+function openEditModal(id) {
+  const entry = data.find(d => d.id === id);
+  if (!entry) return;
+  editId = id;
+  document.getElementById('modalTitle').textContent = 'EDIT UNIT';
+  document.getElementById('fBrand').value = entry.brand;
+  document.getElementById('fModel').value = entry.model;
+  document.getElementById('fScale').value = entry.scale;
+  document.getElementById('fUnits').value = entry.units;
+  document.getElementById('fPrice').value = entry.price;
+  document.getElementById('entryModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('entryModal').classList.remove('open');
+}
+
+function saveEntry() {
+  const model = document.getElementById('fModel').value.trim();
+  if (!model) { showToast('MODEL DESIGNATION REQUIRED', true); return; }
+
+  const entry = {
+    brand: document.getElementById('fBrand').value,
+    model,
+    scale: document.getElementById('fScale').value,
+    units: parseInt(document.getElementById('fUnits').value) || 1,
+    price: parseFloat(document.getElementById('fPrice').value) || 0,
+  };
+
+  if (editId) {
+    const idx = data.findIndex(d => d.id === editId);
+    if (idx !== -1) data[idx] = { ...data[idx], ...entry };
+    showToast('ENTRY UPDATED');
+  } else {
+    data.push({ id: genId(), no: data.length + 1, ...entry });
+    showToast('UNIT ADDED TO BACKLOG');
+  }
+
+  save();
+  renderTable();
+  closeModal();
+}
+
+function deleteEntry(id) {
+  if (!confirm('CONFIRM DELETE: This unit will be removed from the backlog.')) return;
+  data = data.filter(d => d.id !== id);
+  save();
+  renderTable();
+  showToast('UNIT REMOVED');
+}
+
+// Excel
+function downloadTemplate() {
+  const ws = XLSX.utils.aoa_to_sheet([
+    ['Brand', 'Model', 'Scale', 'Units', 'Price (MYR)'],
+    ['Bandai', 'RX-78-2 Gundam Ver.Ka', '1/100', 1, 299.90],
+  ]);
+  ws['!cols'] = [14,32,12,8,14].map(w => ({wch: w}));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Backlog');
+  XLSX.writeFile(wb, 'gunpla_backlog_template.xlsx');
+  showToast('TEMPLATE DOWNLOADED');
+}
+
+function importExcel(evt) {
+  const file = evt.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+      if (rows.length < 2) { showToast('NO DATA IN FILE', true); return; }
+
+      const headers = rows[0].map(h => String(h).toLowerCase().trim());
+      const colBrand = headers.findIndex(h => h.includes('brand'));
+      const colModel = headers.findIndex(h => h.includes('model'));
+      const colScale = headers.findIndex(h => h.includes('scale'));
+      const colUnits = headers.findIndex(h => h.includes('unit'));
+      const colPrice = headers.findIndex(h => h.includes('price'));
+
+      if (colBrand === -1 || colModel === -1) { showToast('MISSING REQUIRED COLUMNS', true); return; }
+
+      let added = 0;
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const model = String(row[colModel] || '').trim();
+        if (!model) continue;
+        data.push({
+          id: genId(),
+          no: data.length + 1,
+          brand: colBrand !== -1 ? String(row[colBrand] || 'Other').trim() : 'Other',
+          model,
+          scale: colScale !== -1 ? String(row[colScale] || '1/144').trim() : '1/144',
+          units: colUnits !== -1 ? parseInt(row[colUnits]) || 1 : 1,
+          price: colPrice !== -1 ? parseFloat(row[colPrice]) || 0 : 0,
+        });
+        added++;
+      }
+      save();
+      renderTable();
+      showToast(`IMPORTED ${added} UNITS`);
+    } catch (err) {
+      showToast('IMPORT FAILED: INVALID FILE', true);
+    }
+    evt.target.value = '';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// SYNC
+function openSyncModal() {
+  const code = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  document.getElementById('syncCodeDisplay').textContent = code;
+  document.getElementById('syncCodeInput').value = '';
+  switchSyncTab('export');
+  document.getElementById('syncModal').classList.add('open');
+}
+
+function closeSyncModal() {
+  document.getElementById('syncModal').classList.remove('open');
+}
+
+function switchSyncTab(tab) {
+  document.querySelectorAll('.sync-tab').forEach((t, i) => {
+    t.classList.toggle('active', (i === 0 && tab === 'export') || (i === 1 && tab === 'import'));
+  });
+  document.getElementById('syncExport').classList.toggle('active', tab === 'export');
+  document.getElementById('syncImport').classList.toggle('active', tab === 'import');
+}
+
+function copySyncCode() {
+  const code = document.getElementById('syncCodeDisplay').textContent;
+  navigator.clipboard.writeText(code).then(() => showToast('CODE COPIED TO CLIPBOARD'));
+}
+
+function decodeSyncCode(code) {
+  return JSON.parse(decodeURIComponent(escape(atob(code.trim()))));
+}
+
+function importSyncCode() {
+  try {
+    const code = document.getElementById('syncCodeInput').value;
+    const imported = decodeSyncCode(code);
+    if (!Array.isArray(imported)) throw new Error();
+    if (!confirm(`CONFIRM OVERWRITE: This will replace your ${data.length} entries with ${imported.length} imported entries.`)) return;
+    data = imported;
+    save();
+    renderTable();
+    closeSyncModal();
+    showToast(`LOADED ${data.length} UNITS FROM SYNC CODE`);
+  } catch {
+    showToast('INVALID SYNC CODE', true);
+  }
+}
+
+function mergeSyncCode() {
+  try {
+    const code = document.getElementById('syncCodeInput').value;
+    const imported = decodeSyncCode(code);
+    if (!Array.isArray(imported)) throw new Error();
+    const existingIds = new Set(data.map(d => d.id));
+    let added = 0;
+    for (const entry of imported) {
+      if (!existingIds.has(entry.id)) {
+        data.push({ ...entry, id: entry.id || genId() });
+        added++;
+      }
+    }
+    save();
+    renderTable();
+    closeSyncModal();
+    showToast(`MERGED: ${added} NEW UNITS ADDED`);
+  } catch {
+    showToast('INVALID SYNC CODE', true);
+  }
+}
+
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = '// ' + msg;
+  t.className = 'toast' + (isError ? ' error' : '') + ' show';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Close modals on backdrop click
+document.getElementById('entryModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+document.getElementById('syncModal').addEventListener('click', function(e) {
+  if (e.target === this) closeSyncModal();
+});
+
+// Init
+load();
+renderTable();
+</script>
+</body>
+</html>
