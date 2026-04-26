@@ -785,7 +785,6 @@
     <div class="toolbar-group">
       <label class="sort-label">SORT BY</label>
       <select class="sort-select" id="sortSelect" onchange="onSortSelect()">
-        <option value="no-asc">No. (default)</option>
         <option value="brand-asc">Brand (A→Z)</option>
         <option value="brand-desc">Brand (Z→A)</option>
         <option value="model-asc">Model (A→Z)</option>
@@ -819,7 +818,6 @@
       <table class="data-table" id="dataTable">
         <thead>
           <tr>
-            <th class="td-no" onclick="sortBy('no')">#</th>
             <th onclick="sortBy('brand')">BRAND</th>
             <th onclick="sortBy('model')">MODEL DESIGNATION</th>
             <th onclick="sortBy('scale')">SCALE</th>
@@ -953,7 +951,7 @@
 <script>
 let data = [];
 let editId = null;
-let sortKey = 'no';
+let sortKey = 'brand';
 let sortDir = 1;
 
 const STORAGE_KEY = 'gunpla_backlog_v1';
@@ -1011,11 +1009,10 @@ function renderTable() {
   const tbody = document.getElementById('tableBody');
 
   if (rows.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">◈</div><div class="empty-text">NO UNITS IN BACKLOG // ADD UNIT TO BEGIN</div></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">◈</div><div class="empty-text">NO UNITS IN BACKLOG // ADD UNIT TO BEGIN</div></div></td></tr>`;
   } else {
     tbody.innerHTML = rows.map((d) => `
       <tr>
-        <td class="td-no">${String(d.no || '').padStart(3, '0')}</td>
         <td><span class="brand-pill ${getBrandClass(d.brand)}">${d.brand}</span></td>
         <td class="td-model">${escHtml(d.model)}</td>
         <td class="td-scale">${d.scale}</td>
