@@ -323,17 +323,17 @@
   .data-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 13px;
+    font-size: 15px;
   }
 
   .data-table thead th {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     letter-spacing: 2px;
     text-transform: uppercase;
     color: var(--text-secondary);
-    padding: 10px 14px;
+    padding: 11px 16px;
     text-align: left;
     border-bottom: 1px solid var(--border-panel);
     background: var(--bg-card);
@@ -357,31 +357,31 @@
   .data-table tbody tr:hover { background: var(--accent-cyan-dim); }
 
   .data-table tbody td {
-    padding: 10px 14px;
+    padding: 12px 16px;
     color: var(--text-primary);
     vertical-align: middle;
   }
 
   .td-no {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
+    font-size: 13px;
     color: var(--text-muted);
-    width: 48px;
+    width: 52px;
   }
 
   .td-brand {
     font-family: 'Rajdhani', sans-serif;
     font-weight: 600;
-    font-size: 12px;
+    font-size: 14px;
     letter-spacing: 1px;
     text-transform: uppercase;
   }
 
   .brand-pill {
     display: inline-block;
-    padding: 2px 8px;
+    padding: 3px 10px;
     border-radius: 1px;
-    font-size: 10px;
+    font-size: 12px;
     letter-spacing: 1.5px;
     border: 1px solid;
   }
@@ -396,19 +396,20 @@
 
   .td-scale {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
+    font-size: 13px;
     color: var(--text-secondary);
   }
 
   .td-units {
     font-family: 'Share Tech Mono', monospace;
+    font-size: 15px;
     font-weight: 600;
     text-align: center;
   }
 
   .td-price {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 12px;
+    font-size: 14px;
     color: var(--accent-amber);
     text-align: right;
   }
@@ -701,6 +702,29 @@
   ::-webkit-scrollbar-thumb { background: #b0c8d8; border-radius: 0; }
   ::-webkit-scrollbar-thumb:hover { background: var(--accent-cyan); }
 
+  .sort-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .sort-select {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-panel);
+    border-radius: 2px;
+    color: var(--text-primary);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    padding: 7px 10px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+
+  .sort-select:focus { border-color: var(--accent-cyan); }
+
   .table-wrap { overflow-x: auto; }
 
   @media (max-width: 768px) {
@@ -756,6 +780,23 @@
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 6a5 5 0 0 1 9-3M11 6a5 5 0 0 1-9 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/><path d="M9 1l1 2-2 1M3 8l-1 2 2 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/></svg>
         SYNC
       </button>
+    </div>
+    <div class="toolbar-divider"></div>
+    <div class="toolbar-group">
+      <label class="sort-label">SORT BY</label>
+      <select class="sort-select" id="sortSelect" onchange="onSortSelect()">
+        <option value="no-asc">No. (default)</option>
+        <option value="brand-asc">Brand (A→Z)</option>
+        <option value="brand-desc">Brand (Z→A)</option>
+        <option value="model-asc">Model (A→Z)</option>
+        <option value="model-desc">Model (Z→A)</option>
+        <option value="scale-asc">Scale (A→Z)</option>
+        <option value="scale-desc">Scale (Z→A)</option>
+        <option value="units-desc">Units (High→Low)</option>
+        <option value="units-asc">Units (Low→High)</option>
+        <option value="price-desc">Price (High→Low)</option>
+        <option value="price-asc">Price (Low→High)</option>
+      </select>
     </div>
     <div class="toolbar-divider"></div>
     <div class="search-wrap">
@@ -941,6 +982,14 @@ function getBrandClass(brand) {
   return 'brand-other';
 }
 
+function onSortSelect() {
+  const val = document.getElementById('sortSelect').value;
+  const [key, dir] = val.split('-');
+  sortKey = key;
+  sortDir = dir === 'asc' ? 1 : -1;
+  renderTable();
+}
+
 function renderTable() {
   const q = document.getElementById('searchInput').value.toLowerCase();
   let rows = data.filter(d =>
@@ -953,6 +1002,7 @@ function renderTable() {
     let va = a[sortKey] ?? '';
     let vb = b[sortKey] ?? '';
     if (sortKey === 'price' || sortKey === 'units') { va = +va; vb = +vb; }
+    if (sortKey === 'no') { va = +va; vb = +vb; }
     if (va < vb) return -sortDir;
     if (va > vb) return sortDir;
     return 0;
@@ -963,9 +1013,9 @@ function renderTable() {
   if (rows.length === 0) {
     tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">◈</div><div class="empty-text">NO UNITS IN BACKLOG // ADD UNIT TO BEGIN</div></div></td></tr>`;
   } else {
-    tbody.innerHTML = rows.map((d, i) => `
+    tbody.innerHTML = rows.map((d) => `
       <tr>
-        <td class="td-no">${String(i + 1).padStart(3, '0')}</td>
+        <td class="td-no">${String(d.no || '').padStart(3, '0')}</td>
         <td><span class="brand-pill ${getBrandClass(d.brand)}">${d.brand}</span></td>
         <td class="td-model">${escHtml(d.model)}</td>
         <td class="td-scale">${d.scale}</td>
@@ -990,10 +1040,6 @@ function renderTable() {
   document.getElementById('totalKits').textContent = totalKits;
   document.getElementById('totalUnits').textContent = totalUnits;
   document.getElementById('totalValue').textContent = 'RM ' + totalValue.toFixed(2);
-
-  document.querySelectorAll('.data-table thead th').forEach(th => {
-    th.classList.remove('sort-asc', 'sort-desc');
-  });
 }
 
 function escHtml(s) {
@@ -1051,7 +1097,7 @@ function saveEntry() {
     if (idx !== -1) data[idx] = { ...data[idx], ...entry };
     showToast('ENTRY UPDATED');
   } else {
-    data.push({ id: genId(), no: data.length + 1, ...entry });
+    data.push({ id: genId(), no: (data.reduce((m, d) => Math.max(m, d.no || 0), 0) + 1), ...entry });
     showToast('UNIT ADDED TO BACKLOG');
   }
 
@@ -1214,6 +1260,7 @@ document.getElementById('syncModal').addEventListener('click', function(e) {
 
 // Init
 load();
+data = data.map((d, i) => ({ no: i + 1, ...d }));
 renderTable();
 </script>
 </body>
