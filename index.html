@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Model Kit Inventory</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;500;700&display=swap');
 
@@ -1173,9 +1174,25 @@ function importExcel(evt) {
   reader.readAsArrayBuffer(file);
 }
 
+// SYNC — minified keys + LZString compression
+const K = { brand:'b', model:'m', scale:'s', units:'u', price:'p', id:'i' };
+const KR = Object.fromEntries(Object.entries(K).map(([k,v]) => [v,k]));
+
+function encodeData(arr) {
+  const mini = arr.map(d => ({ i:d.id, b:d.brand, m:d.model, s:d.scale, u:d.units, p:d.price }));
+  return LZString.compressToEncodedURIComponent(JSON.stringify(mini));
+}
+
+function decodeData(code) {
+  const decompressed = LZString.decompressFromEncodedURIComponent(code.trim());
+  if (!decompressed) throw new Error('Decompress failed');
+  const mini = JSON.parse(decompressed);
+  return mini.map(d => ({ id: d.i || genId(), brand: d.b, model: d.m, scale: d.s, units: d.u, price: d.p }));
+}
+
 // SYNC
 function openSyncModal() {
-  const code = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  const code = encodeData(data);
   document.getElementById('syncCodeDisplay').textContent = code;
   document.getElementById('syncCodeInput').value = '';
   switchSyncTab('export');
@@ -1200,7 +1217,7 @@ function copySyncCode() {
 }
 
 function decodeSyncCode(code) {
-  return JSON.parse(decodeURIComponent(escape(atob(code.trim()))));
+  return decodeData(code);
 }
 
 function importSyncCode() {
