@@ -733,6 +733,118 @@
     .toolbar { gap: 8px; }
     .logo-main { font-size: 24px; }
   }
+
+  /* IMAGE UPLOAD */
+  .img-upload-area {
+    border: 1px dashed var(--border-panel);
+    border-radius: 2px;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    position: relative;
+    min-height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-card);
+  }
+
+  .img-upload-area:hover { border-color: var(--accent-cyan); background: var(--accent-cyan-dim); }
+  .img-upload-area.drag-over { border-color: var(--accent-cyan); background: var(--accent-cyan-dim); }
+
+  .img-upload-placeholder {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+  }
+
+  .img-preview {
+    max-height: 120px;
+    max-width: 100%;
+    border-radius: 2px;
+    object-fit: contain;
+  }
+
+  .img-clear-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: var(--accent-red);
+    color: #fff;
+    border: none;
+    border-radius: 2px;
+    width: 22px;
+    height: 22px;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.85;
+    transition: opacity 0.15s;
+  }
+
+  .img-clear-btn:hover { opacity: 1; }
+
+  /* TABLE THUMBNAIL */
+  .td-thumb {
+    width: 56px;
+    padding: 6px 8px !important;
+    text-align: center;
+  }
+
+  .row-thumb {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 2px;
+    border: 1px solid var(--border-panel);
+    cursor: pointer;
+    transition: transform 0.15s, border-color 0.15s;
+    display: block;
+    margin: 0 auto;
+  }
+
+  .row-thumb:hover { transform: scale(1.08); border-color: var(--accent-cyan); }
+
+  .row-thumb-empty {
+    width: 40px;
+    height: 40px;
+    border: 1px dashed var(--border-panel);
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 14px;
+    margin: 0 auto;
+    opacity: 0.4;
+  }
+
+  /* IMAGE VIEWER MODAL */
+  .img-viewer-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    cursor: zoom-out;
+  }
+
+  .img-viewer-backdrop.open { display: flex; }
+
+  .img-viewer-backdrop img {
+    max-width: 90vw;
+    max-height: 90vh;
+    border-radius: 2px;
+    border: 1px solid var(--border-cyan);
+    box-shadow: 0 0 40px rgba(0,0,0,0.6);
+    cursor: default;
+  }
 </style>
 </head>
 <body>
@@ -820,6 +932,7 @@
         <thead>
           <tr>
             <th class="td-no">#</th>
+            <th style="width:56px"></th>
             <th onclick="sortBy('brand')">BRAND</th>
             <th onclick="sortBy('model')">MODEL DESIGNATION</th>
             <th onclick="sortBy('scale')">SCALE</th>
@@ -901,6 +1014,18 @@
           <label class="form-label">Price (MYR)</label>
           <input class="form-input" type="number" id="fPrice" min="0" step="0.01" placeholder="0.00">
         </div>
+        <div class="form-group form-full">
+          <label class="form-label">Image <span style="color:var(--text-muted);font-size:9px;letter-spacing:1px">(OPTIONAL)</span></label>
+          <div class="img-upload-area" id="imgUploadArea" onclick="document.getElementById('fImage').click()">
+            <div class="img-upload-placeholder" id="imgPlaceholder">
+              <div style="font-size:22px;margin-bottom:6px;opacity:0.4">⊕</div>
+              <div>CLICK OR DROP IMAGE</div>
+            </div>
+            <img id="imgPreview" class="img-preview" src="" alt="preview" style="display:none">
+            <button class="img-clear-btn" id="imgClearBtn" onclick="clearImage(event)" style="display:none">✕</button>
+          </div>
+          <input type="file" id="fImage" accept="image/*" style="display:none" onchange="handleImageUpload(event)">
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -927,7 +1052,7 @@
     </div>
     <div class="modal-body">
       <div class="sync-panel active" id="syncExport">
-        <div class="sync-note">Copy this sync code and paste it on another device to transfer your backlog data.</div>
+        <div class="sync-note">Copy this sync code and paste it on another device to transfer your backlog data. Images are included but will make the code longer.</div>
         <div class="code-display" id="syncCodeDisplay"></div>
         <button class="btn btn-primary" onclick="copySyncCode()" style="width:100%;justify-content:center;">
           COPY SYNC CODE
@@ -950,9 +1075,15 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- IMAGE VIEWER -->
+<div class="img-viewer-backdrop" id="imgViewer" onclick="closeImageViewer()">
+  <img id="imgViewerImg" src="" alt="Kit image">
+</div>
+
 <script>
 let data = [];
 let editId = null;
+let currentImage = null;
 let sortKey = 'brand';
 let sortDir = 1;
 
@@ -1011,11 +1142,16 @@ function renderTable() {
   const tbody = document.getElementById('tableBody');
 
   if (rows.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">◈</div><div class="empty-text">NO UNITS IN BACKLOG // ADD UNIT TO BEGIN</div></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">◈</div><div class="empty-text">NO UNITS IN BACKLOG // ADD UNIT TO BEGIN</div></div></td></tr>`;
   } else {
     tbody.innerHTML = rows.map((d, i) => `
       <tr>
         <td class="td-no">${String(i + 1).padStart(3, '0')}</td>
+        <td class="td-thumb">
+          ${d.image
+            ? `<img src="${d.image}" class="row-thumb" onclick="openImageViewer('${d.id}')" title="View image">`
+            : `<div class="row-thumb-empty">◈</div>`}
+        </td>
         <td><span class="brand-pill ${getBrandClass(d.brand)}">${d.brand}</span></td>
         <td class="td-model">${escHtml(d.model)}</td>
         <td class="td-scale">${d.scale}</td>
@@ -1060,6 +1196,7 @@ function openAddModal() {
   document.getElementById('fScale').value = '';
   document.getElementById('fUnits').value = 1;
   document.getElementById('fPrice').value = '';
+  resetImageUI();
   document.getElementById('entryModal').classList.add('open');
 }
 
@@ -1073,6 +1210,7 @@ function openEditModal(id) {
   document.getElementById('fScale').value = entry.scale;
   document.getElementById('fUnits').value = entry.units;
   document.getElementById('fPrice').value = entry.price;
+  resetImageUI(entry.image || null);
   document.getElementById('entryModal').classList.add('open');
 }
 
@@ -1090,6 +1228,7 @@ function saveEntry() {
     scale: document.getElementById('fScale').value,
     units: parseInt(document.getElementById('fUnits').value) || 1,
     price: parseFloat(document.getElementById('fPrice').value) || 0,
+    image: currentImage || null,
   };
 
   if (editId) {
@@ -1174,12 +1313,93 @@ function importExcel(evt) {
   reader.readAsArrayBuffer(file);
 }
 
+// IMAGE HELPERS
+function resetImageUI(existingImage = null) {
+  currentImage = existingImage;
+  const preview = document.getElementById('imgPreview');
+  const placeholder = document.getElementById('imgPlaceholder');
+  const clearBtn = document.getElementById('imgClearBtn');
+  document.getElementById('fImage').value = '';
+  if (existingImage) {
+    preview.src = existingImage;
+    preview.style.display = 'block';
+    placeholder.style.display = 'none';
+    clearBtn.style.display = 'flex';
+  } else {
+    preview.src = '';
+    preview.style.display = 'none';
+    placeholder.style.display = 'block';
+    clearBtn.style.display = 'none';
+  }
+}
+
+function handleImageUpload(evt) {
+  const file = evt.target.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) { showToast('IMAGE TOO LARGE (MAX 2MB)', true); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    // Resize to max 400px to keep storage lean
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 400;
+      const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+      currentImage = dataUrl;
+      document.getElementById('imgPreview').src = dataUrl;
+      document.getElementById('imgPreview').style.display = 'block';
+      document.getElementById('imgPlaceholder').style.display = 'none';
+      document.getElementById('imgClearBtn').style.display = 'flex';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearImage(e) {
+  e.stopPropagation();
+  resetImageUI(null);
+}
+
+function openImageViewer(id) {
+  const entry = data.find(d => d.id === id);
+  if (!entry || !entry.image) return;
+  document.getElementById('imgViewerImg').src = entry.image;
+  document.getElementById('imgViewer').classList.add('open');
+}
+
+function closeImageViewer() {
+  document.getElementById('imgViewer').classList.remove('open');
+}
+
+// Drag & drop on image upload area
+document.addEventListener('DOMContentLoaded', () => {
+  const area = document.getElementById('imgUploadArea');
+  area.addEventListener('dragover', e => { e.preventDefault(); area.classList.add('drag-over'); });
+  area.addEventListener('dragleave', () => area.classList.remove('drag-over'));
+  area.addEventListener('drop', e => {
+    e.preventDefault();
+    area.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      document.getElementById('fImage').files = dt.files;
+      handleImageUpload({ target: { files: [file] } });
+    }
+  });
+});
+
 // SYNC — minified keys + LZString compression
 const K = { brand:'b', model:'m', scale:'s', units:'u', price:'p', id:'i' };
 const KR = Object.fromEntries(Object.entries(K).map(([k,v]) => [v,k]));
 
 function encodeData(arr) {
-  const mini = arr.map(d => ({ i:d.id, b:d.brand, m:d.model, s:d.scale, u:d.units, p:d.price }));
+  const mini = arr.map(d => ({ i:d.id, b:d.brand, m:d.model, s:d.scale, u:d.units, p:d.price, x:d.image||null }));
   return LZString.compressToEncodedURIComponent(JSON.stringify(mini));
 }
 
@@ -1187,7 +1407,7 @@ function decodeData(code) {
   const decompressed = LZString.decompressFromEncodedURIComponent(code.trim());
   if (!decompressed) throw new Error('Decompress failed');
   const mini = JSON.parse(decompressed);
-  return mini.map(d => ({ id: d.i || genId(), brand: d.b, model: d.m, scale: d.s, units: d.u, price: d.p }));
+  return mini.map(d => ({ id: d.i || genId(), brand: d.b, model: d.m, scale: d.s, units: d.u, price: d.p, image: d.x || null }));
 }
 
 // SYNC
