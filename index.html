@@ -927,6 +927,13 @@
     </div>
     <div class="toolbar-divider"></div>
     <div class="toolbar-group">
+      <button class="btn" onclick="openSettingsModal()" style="border-color:var(--border-panel);color:var(--text-secondary);">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="2" stroke="currentColor" stroke-width="1.5"/><path d="M6 1v1M6 10v1M1 6h1M10 6h1M2.5 2.5l.7.7M8.8 8.8l.7.7M9.5 2.5l-.7.7M3.2 8.8l-.7.7" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/></svg>
+        SETTINGS
+      </button>
+    </div>
+    <div class="toolbar-divider"></div>
+    <div class="toolbar-group">
       <label class="sort-label">SORT BY</label>
       <select class="sort-select" id="sortSelect" onchange="onSortSelect()">
         <option value="brand-asc">Brand (A→Z)</option>
@@ -1067,6 +1074,35 @@
     <div class="modal-footer">
       <button class="btn" onclick="closeModal()" style="border-color:var(--border-panel);color:var(--text-secondary)">CANCEL</button>
       <button class="btn btn-primary" onclick="saveEntry()">SAVE ENTRY</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-backdrop" id="settingsModal">
+  <div class="modal" style="max-width:480px;">
+    <div class="corner-deco tl"></div><div class="corner-deco tr"></div>
+    <div class="corner-deco bl"></div><div class="corner-deco br"></div>
+    <div class="modal-header">
+      <div class="modal-title">SETTINGS</div>
+      <button class="modal-close" onclick="closeSettingsModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group" style="margin-bottom:6px;">
+        <label class="form-label">Bing Image Search API Key</label>
+        <div style="display:flex;gap:8px;">
+          <input class="form-input" type="password" id="bingApiKeyInput" placeholder="Paste your Bing API key here..." style="flex:1;">
+          <button class="btn btn-primary" onclick="saveBingKey()" style="white-space:nowrap;">SAVE</button>
+        </div>
+      </div>
+      <div class="sync-note" style="margin-top:10px;">
+        Get a free key (1,000 searches/month) from <strong>portal.azure.com</strong> → Create resource → search "Bing Image Search" → F1 (Free) tier → Keys and Endpoint → Key 1.
+        <br><br>Your key is stored only in your browser's local storage and never sent anywhere except Bing's API.
+      </div>
+      <div id="bingKeyStatus" style="font-family:'Share Tech Mono',monospace;font-size:11px;margin-top:10px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeSettingsModal()" style="border-color:var(--border-panel);color:var(--text-secondary)">CLOSE</button>
     </div>
   </div>
 </div>
@@ -1428,49 +1464,84 @@ function closeImageViewer() {
   document.getElementById('imgViewer').classList.remove('open');
 }
 
-// AUTO-FIND IMAGE via Claude API
-async function autoFindImage() {
-  const model = document.getElementById('fModel').value.trim();
-  const brand = document.getElementById('fBrand').value.trim();
-  const scale = document.getElementById('fScale').value.trim();
+// SETTINGS
+function openSettingsModal() {
+  const key = localStorage.getItem('bing_api_key') || '';
+  document.getElementById('bingApiKeyInput').value = key;
+  updateBingKeyStatus();
+  document.getElementById('settingsModal').classList.add('open');
+}
 
-  if (!model) { showToast('ENTER MODEL NAME FIRST', true); return; }
+function closeSettingsModal() {
+  document.getElementById('settingsModal').classList.remove('open');
+}
+
+function saveBingKey() {
+  const key = document.getElementById('bingApiKeyInput').value.trim();
+  if (!key) {
+    localStorage.removeItem('bing_api_key');
+    updateBingKeyStatus();
+    showToast('API KEY CLEARED');
+    return;
+  }
+  localStorage.setItem('bing_api_key', key);
+  updateBingKeyStatus();
+  showToast('API KEY SAVED');
+}
+
+function updateBingKeyStatus() {
+  const key = localStorage.getItem('bing_api_key');
+  const el = document.getElementById('bingKeyStatus');
+  if (el) {
+    el.textContent = key
+      ? `// KEY SET: ${key.slice(0,4)}${'•'.repeat(8)}${key.slice(-4)}`
+      : '// NO KEY SET — AUTO-FIND DISABLED';
+    el.style.color = key ? 'var(--accent-green)' : 'var(--accent-red)';
+  }
+}
+
+document.getElementById('settingsModal').addEventListener('click', function(e) {
+  if (e.target === this) closeSettingsModal();
+});
+
+// AUTO-FIND IMAGE via Bing Image Search API
+async function autoFindImage() {
+  const modelVal = document.getElementById('fModel').value.trim();
+  const brandVal = document.getElementById('fBrand').value.trim();
+  const scaleVal = document.getElementById('fScale').value.trim();
+
+  if (!modelVal) { showToast('ENTER MODEL NAME FIRST', true); return; }
+
+  const bingKey = localStorage.getItem('bing_api_key');
+  if (!bingKey) {
+    showToast('ADD BING API KEY IN SETTINGS FIRST', true);
+    openSettingsModal();
+    return;
+  }
 
   const btn = document.getElementById('autoFindBtn');
   const btnText = document.getElementById('autoFindBtnText');
   btn.disabled = true;
   btnText.textContent = '⟳ SEARCHING...';
 
-  const query = [brand, scale, model, 'model kit box art'].filter(Boolean).join(' ');
+  const query = [brandVal, scaleVal, modelVal, 'model kit box art'].filter(Boolean).join(' ');
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-        system: `You are a helper that finds product images for Gunpla and model kit listings. 
-When given a model kit name, search for it and return ONLY a JSON array of up to 6 direct image URLs (jpg/png/webp) showing the box art or official product photos. 
-Prefer images from official retailers, manufacturer sites, or hobby shops (HLJ, Gundam Planet, Bandai, Amazon, etc.).
-Return ONLY valid JSON like: ["https://...", "https://..."] with no other text.`,
-        messages: [{ role: 'user', content: `Find product/box art images for: ${query}` }]
-      })
-    });
+    const res = await fetch(
+      `https://api.bing.microsoft.com/v7.0/images/search?q=${encodeURIComponent(query)}&count=9&imageType=Photo&safeSearch=Strict`,
+      { headers: { 'Ocp-Apim-Subscription-Key': bingKey } }
+    );
 
-    const data_r = await response.json();
-    const text = (data_r.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+    if (res.status === 401) { showToast('INVALID API KEY — CHECK SETTINGS', true); openSettingsModal(); return; }
+    if (!res.ok) throw new Error(`Bing error ${res.status}`);
 
-    // Extract JSON array from response
-    const match = text.match(/\[[\s\S]*?\]/);
-    if (!match) throw new Error('No image URLs returned');
-    const urls = JSON.parse(match[0]).filter(u => typeof u === 'string' && u.startsWith('http'));
-    if (!urls.length) throw new Error('Empty image list');
+    const json = await res.json();
+    const urls = (json.value || []).map(img => img.contentUrl).filter(Boolean);
+    if (!urls.length) throw new Error('No images found');
 
     openImagePicker(urls);
   } catch (err) {
-    showToast('AUTO-FIND FAILED — TRY MANUAL UPLOAD', true);
+    showToast('SEARCH FAILED — CHECK API KEY', true);
   } finally {
     btn.disabled = false;
     btnText.textContent = '⚡ AUTO-FIND';
