@@ -1710,11 +1710,12 @@ function updateSyncModalStatus() {
 async function gistPull() {
   const token = localStorage.getItem('github_token');
   const gistId = localStorage.getItem('gist_id');
+  const workerUrl = localStorage.getItem('worker_url');
   if (!token) { showToast('SET GITHUB TOKEN IN SETTINGS', true); openSettingsModal(); return; }
   if (!gistId) { showToast('NO GIST FOUND — ENTER GIST ID IN SETTINGS', true); openSettingsModal(); return; }
   showToast('PULLING FROM GIST...');
   try {
-    // First get the gist metadata to find the raw URL
+    // Step 1: get gist metadata (this endpoint supports CORS fine)
     const metaRes = await fetch(`https://api.github.com/gists/${gistId}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -1730,13 +1731,22 @@ async function gistPull() {
     const rawUrl = meta.files?.[GIST_FILENAME]?.raw_url;
     if (!rawUrl) { showToast('FILE NOT FOUND IN GIST', true); return; }
 
-    // Fetch raw content directly — no size limit
-    const rawRes = await fetch(rawUrl, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (!rawRes.ok) { showToast(`RAW FETCH FAILED — HTTP ${rawRes.status}`, true); return; }
+    // Step 2: fetch raw content via worker to avoid CORS on raw.githubusercontent.com
+    let text;
+    if (workerUrl) {
+      const proxyRes = await fetch(
+        `${workerUrl.replace(/\/$/, '')}?mode=gist&url=${encodeURIComponent(rawUrl)}`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      if (!proxyRes.ok) { showToast(`PROXY FETCH FAILED — HTTP ${proxyRes.status}`, true); return; }
+      text = await proxyRes.text();
+    } else {
+      // Fallback: try direct (may work on some browsers/configs)
+      const rawRes = await fetch(rawUrl, { headers: { 'Authorization': `Bearer ${token}` } });
+      if (!rawRes.ok) { showToast(`RAW FETCH FAILED — HTTP ${rawRes.status}`, true); return; }
+      text = await rawRes.text();
+    }
 
-    const text = await rawRes.text();
     const pulled = JSON.parse(text);
     if (!Array.isArray(pulled)) { showToast('INVALID DATA FORMAT', true); return; }
     data = pulled;
