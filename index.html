@@ -1098,8 +1098,16 @@
             <button class="btn btn-primary" onclick="saveGithubSettings()" style="white-space:nowrap;">SAVE</button>
           </div>
         </div>
+        <div class="form-group" style="margin-bottom:10px;">
+          <label class="form-label">Gist ID <span style="color:var(--text-muted);font-size:9px;letter-spacing:1px">(for new devices)</span></label>
+          <div style="display:flex;gap:8px;">
+            <input class="form-input" type="text" id="gistIdInput" placeholder="e.g. a1b2c3d4e5f6..." style="flex:1;">
+            <button class="btn btn-primary" onclick="saveGistId()" style="white-space:nowrap;">SAVE</button>
+          </div>
+        </div>
         <div class="sync-note">
           Go to <strong>github.com</strong> → Profile → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token → tick <strong>gist</strong> scope only → copy the token.
+          <br><br>On a <strong>new device</strong>, paste both your token and Gist ID to connect to your existing data. The Gist ID appears below after your first push.
         </div>
         <div id="githubStatus" style="font-family:'Share Tech Mono',monospace;font-size:11px;margin-top:8px;"></div>
       </div>
@@ -1482,6 +1490,7 @@ function closeImageViewer() {
 // SETTINGS
 function openSettingsModal() {
   document.getElementById('githubTokenInput').value = localStorage.getItem('github_token') || '';
+  document.getElementById('gistIdInput').value = localStorage.getItem('gist_id') || '';
   document.getElementById('bingApiKeyInput').value = localStorage.getItem('worker_url') || '';
   updateGithubStatus();
   updateBingKeyStatus();
@@ -1499,13 +1508,20 @@ function saveGithubSettings() {
   showToast(token ? 'GITHUB TOKEN SAVED' : 'GITHUB TOKEN CLEARED');
 }
 
+function saveGistId() {
+  const gistId = document.getElementById('gistIdInput').value.trim();
+  if (!gistId) { localStorage.removeItem('gist_id'); } else { localStorage.setItem('gist_id', gistId); }
+  updateGithubStatus();
+  showToast(gistId ? 'GIST ID SAVED — YOU CAN NOW PULL' : 'GIST ID CLEARED');
+}
+
 function updateGithubStatus() {
   const token = localStorage.getItem('github_token');
   const gistId = localStorage.getItem('gist_id');
   const el = document.getElementById('githubStatus');
   if (!el) return;
   if (!token) { el.textContent = '// NO TOKEN — GIST SYNC DISABLED'; el.style.color = 'var(--accent-red)'; }
-  else if (gistId) { el.textContent = `// TOKEN SET · GIST: ${gistId.slice(0,8)}...`; el.style.color = 'var(--accent-green)'; }
+  else if (gistId) { el.textContent = `// READY · GIST ID: ${gistId}`; el.style.color = 'var(--accent-green)'; }
   else { el.textContent = '// TOKEN SET · NO GIST YET — PUSH TO CREATE'; el.style.color = 'var(--accent-amber)'; }
 }
 
