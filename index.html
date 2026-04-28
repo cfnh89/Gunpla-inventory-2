@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Model Kit Inventory</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;500;700&display=swap');
 
@@ -1087,19 +1086,40 @@
       <div class="modal-title">SETTINGS</div>
       <button class="modal-close" onclick="closeSettingsModal()">✕</button>
     </div>
-    <div class="modal-body">
-      <div class="form-group" style="margin-bottom:6px;">
-        <label class="form-label">Cloudflare Worker URL</label>
-        <div style="display:flex;gap:8px;">
-          <input class="form-input" type="text" id="bingApiKeyInput" placeholder="https://your-worker.workers.dev" style="flex:1;">
-          <button class="btn btn-primary" onclick="saveBingKey()" style="white-space:nowrap;">SAVE</button>
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:20px;">
+
+      <!-- GitHub Gist Sync -->
+      <div>
+        <div class="form-label" style="margin-bottom:10px;color:var(--accent-cyan);">// GITHUB GIST SYNC</div>
+        <div class="form-group" style="margin-bottom:10px;">
+          <label class="form-label">Personal Access Token (gist scope)</label>
+          <div style="display:flex;gap:8px;">
+            <input class="form-input" type="password" id="githubTokenInput" placeholder="ghp_xxxxxxxxxxxx" style="flex:1;">
+            <button class="btn btn-primary" onclick="saveGithubSettings()" style="white-space:nowrap;">SAVE</button>
+          </div>
         </div>
+        <div class="sync-note">
+          Go to <strong>github.com</strong> → Profile → Settings → Developer settings → Personal access tokens → Tokens (classic) → Generate new token → tick <strong>gist</strong> scope only → copy the token.
+        </div>
+        <div id="githubStatus" style="font-family:'Share Tech Mono',monospace;font-size:11px;margin-top:8px;"></div>
       </div>
-      <div class="sync-note" style="margin-top:10px;">
-        Deploy the included <strong>cloudflare-worker.js</strong> to Cloudflare Workers (free), paste your SerpApi key inside it, then paste the worker URL here.
-        <br><br>The worker URL is stored only in your browser's local storage.
+
+      <div style="border-top:1px solid var(--border-panel);"></div>
+
+      <!-- Cloudflare Worker -->
+      <div>
+        <div class="form-label" style="margin-bottom:10px;color:var(--accent-cyan);">// AUTO-FIND IMAGE</div>
+        <div class="form-group" style="margin-bottom:6px;">
+          <label class="form-label">Cloudflare Worker URL</label>
+          <div style="display:flex;gap:8px;">
+            <input class="form-input" type="text" id="bingApiKeyInput" placeholder="https://your-worker.workers.dev" style="flex:1;">
+            <button class="btn btn-primary" onclick="saveBingKey()" style="white-space:nowrap;">SAVE</button>
+          </div>
+        </div>
+        <div class="sync-note">Deploy cloudflare-worker.js to Cloudflare Workers with your SerpApi key, then paste the worker URL here.</div>
+        <div id="bingKeyStatus" style="font-family:'Share Tech Mono',monospace;font-size:11px;margin-top:8px;"></div>
       </div>
-      <div id="bingKeyStatus" style="font-family:'Share Tech Mono',monospace;font-size:11px;margin-top:10px;"></div>
+
     </div>
     <div class="modal-footer">
       <button class="btn" onclick="closeSettingsModal()" style="border-color:var(--border-panel);color:var(--text-secondary)">CLOSE</button>
@@ -1125,38 +1145,33 @@
 
 <!-- SYNC MODAL -->
 <div class="modal-backdrop" id="syncModal">
-  <div class="modal" style="max-width:600px;">
+  <div class="modal" style="max-width:480px;">
     <div class="corner-deco tl"></div>
     <div class="corner-deco tr"></div>
     <div class="corner-deco bl"></div>
     <div class="corner-deco br"></div>
     <div class="modal-header">
-      <div class="modal-title">DATA SYNC</div>
+      <div class="modal-title">GIST SYNC</div>
       <button class="modal-close" onclick="closeSyncModal()">✕</button>
     </div>
-    <div class="sync-tabs">
-      <button class="sync-tab active" onclick="switchSyncTab('export')">EXPORT CODE</button>
-      <button class="sync-tab" onclick="switchSyncTab('import')">IMPORT CODE</button>
-    </div>
-    <div class="modal-body">
-      <div class="sync-panel active" id="syncExport">
-        <div class="sync-note">Copy this sync code and paste it on another device to transfer your backlog data. Images are included but will make the code longer.</div>
-        <div class="code-display" id="syncCodeDisplay"></div>
-        <button class="btn btn-primary" onclick="copySyncCode()" style="width:100%;justify-content:center;">
-          COPY SYNC CODE
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:14px;">
+      <div id="syncStatusMsg" style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-muted);"></div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button class="btn btn-green" onclick="gistPush()" style="justify-content:center;">
+          <svg width="13" height="13" viewBox="0 0 12 12" fill="none"><path d="M6 1v7M3 6l3-3 3 3M1 10h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/></svg>
+          PUSH — Save to Gist
+        </button>
+        <button class="btn btn-primary" onclick="gistPull()" style="justify-content:center;">
+          <svg width="13" height="13" viewBox="0 0 12 12" fill="none"><path d="M6 8V1M3 4l3 3 3-3M1 10h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/></svg>
+          PULL — Load from Gist
         </button>
       </div>
-      <div class="sync-panel" id="syncImport">
-        <div class="sync-note">Paste a sync code from another device to load that backlog data. This will REPLACE your current data.</div>
-        <textarea class="form-input" id="syncCodeInput" rows="5" placeholder="PASTE SYNC CODE HERE..." style="resize:vertical;font-family:'Share Tech Mono',monospace;font-size:11px;"></textarea>
-        <div style="margin-top:12px;display:flex;gap:10px;">
-          <button class="btn btn-danger" onclick="importSyncCode()" style="flex:1;justify-content:center;">OVERWRITE &amp; LOAD</button>
-          <button class="btn btn-green" onclick="mergeSyncCode()" style="flex:1;justify-content:center;">MERGE &amp; APPEND</button>
-        </div>
-        <div class="sync-note" style="margin-top:10px;">
-          OVERWRITE replaces all data. MERGE adds new entries without removing existing ones.
-        </div>
+      <div class="sync-note">
+        <strong>PUSH</strong> uploads your current backlog to a private GitHub Gist.<br>
+        <strong>PULL</strong> downloads and replaces your local data with the Gist version.<br><br>
+        Set up your GitHub token in <strong>Settings</strong> first. The Gist ID is saved automatically after first push.
       </div>
+      <div id="gistIdDisplay" style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text-muted);word-break:break-all;"></div>
     </div>
   </div>
 </div>
@@ -1466,8 +1481,9 @@ function closeImageViewer() {
 
 // SETTINGS
 function openSettingsModal() {
-  const key = localStorage.getItem('worker_url') || '';
-  document.getElementById('bingApiKeyInput').value = key;
+  document.getElementById('githubTokenInput').value = localStorage.getItem('github_token') || '';
+  document.getElementById('bingApiKeyInput').value = localStorage.getItem('worker_url') || '';
+  updateGithubStatus();
   updateBingKeyStatus();
   document.getElementById('settingsModal').classList.add('open');
 }
@@ -1476,24 +1492,35 @@ function closeSettingsModal() {
   document.getElementById('settingsModal').classList.remove('open');
 }
 
+function saveGithubSettings() {
+  const token = document.getElementById('githubTokenInput').value.trim();
+  if (!token) { localStorage.removeItem('github_token'); } else { localStorage.setItem('github_token', token); }
+  updateGithubStatus();
+  showToast(token ? 'GITHUB TOKEN SAVED' : 'GITHUB TOKEN CLEARED');
+}
+
+function updateGithubStatus() {
+  const token = localStorage.getItem('github_token');
+  const gistId = localStorage.getItem('gist_id');
+  const el = document.getElementById('githubStatus');
+  if (!el) return;
+  if (!token) { el.textContent = '// NO TOKEN — GIST SYNC DISABLED'; el.style.color = 'var(--accent-red)'; }
+  else if (gistId) { el.textContent = `// TOKEN SET · GIST: ${gistId.slice(0,8)}...`; el.style.color = 'var(--accent-green)'; }
+  else { el.textContent = '// TOKEN SET · NO GIST YET — PUSH TO CREATE'; el.style.color = 'var(--accent-amber)'; }
+}
+
 function saveBingKey() {
   const key = document.getElementById('bingApiKeyInput').value.trim();
-  if (!key) {
-    localStorage.removeItem('worker_url');
-    updateBingKeyStatus();
-    showToast('WORKER URL CLEARED');
-    return;
-  }
-  localStorage.setItem('worker_url', key);
+  if (!key) { localStorage.removeItem('worker_url'); } else { localStorage.setItem('worker_url', key); }
   updateBingKeyStatus();
-  showToast('WORKER URL SAVED');
+  showToast(key ? 'WORKER URL SAVED' : 'WORKER URL CLEARED');
 }
 
 function updateBingKeyStatus() {
   const key = localStorage.getItem('worker_url');
   const el = document.getElementById('bingKeyStatus');
   if (el) {
-    el.textContent = key ? `// WORKER: ${key}` : '// NO WORKER URL SET — AUTO-FIND DISABLED';
+    el.textContent = key ? `// WORKER: ${key}` : '// NO WORKER URL — AUTO-FIND DISABLED';
     el.style.color = key ? 'var(--accent-green)' : 'var(--accent-red)';
   }
 }
@@ -1641,28 +1668,11 @@ document.addEventListener('paste', e => {
   }
 });
 
-// SYNC — minified keys + LZString compression
-const K = { brand:'b', model:'m', scale:'s', units:'u', price:'p', id:'i' };
-const KR = Object.fromEntries(Object.entries(K).map(([k,v]) => [v,k]));
+// GIST SYNC
+const GIST_FILENAME = 'gunpla-backlog.json';
 
-function encodeData(arr) {
-  const mini = arr.map(d => ({ i:d.id, b:d.brand, m:d.model, s:d.scale, u:d.units, p:d.price, x:d.image||null }));
-  return LZString.compressToEncodedURIComponent(JSON.stringify(mini));
-}
-
-function decodeData(code) {
-  const decompressed = LZString.decompressFromEncodedURIComponent(code.trim());
-  if (!decompressed) throw new Error('Decompress failed');
-  const mini = JSON.parse(decompressed);
-  return mini.map(d => ({ id: d.i || genId(), brand: d.b, model: d.m, scale: d.s, units: d.u, price: d.p, image: d.x || null }));
-}
-
-// SYNC
 function openSyncModal() {
-  const code = encodeData(data);
-  document.getElementById('syncCodeDisplay').textContent = code;
-  document.getElementById('syncCodeInput').value = '';
-  switchSyncTab('export');
+  updateSyncModalStatus();
   document.getElementById('syncModal').classList.add('open');
 }
 
@@ -1670,59 +1680,76 @@ function closeSyncModal() {
   document.getElementById('syncModal').classList.remove('open');
 }
 
-function switchSyncTab(tab) {
-  document.querySelectorAll('.sync-tab').forEach((t, i) => {
-    t.classList.toggle('active', (i === 0 && tab === 'export') || (i === 1 && tab === 'import'));
-  });
-  document.getElementById('syncExport').classList.toggle('active', tab === 'export');
-  document.getElementById('syncImport').classList.toggle('active', tab === 'import');
+function updateSyncModalStatus() {
+  const token = localStorage.getItem('github_token');
+  const gistId = localStorage.getItem('gist_id');
+  const msg = document.getElementById('syncStatusMsg');
+  const gistDisplay = document.getElementById('gistIdDisplay');
+  if (!token) { msg.textContent = '⚠ No GitHub token — go to Settings first.'; msg.style.color = 'var(--accent-red)'; }
+  else if (!gistId) { msg.textContent = '// Token ready. Push to create your Gist.'; msg.style.color = 'var(--accent-amber)'; }
+  else { msg.textContent = '// Gist linked. Push to save, Pull to load.'; msg.style.color = 'var(--accent-green)'; }
+  gistDisplay.textContent = gistId ? `Gist ID: ${gistId}` : '';
 }
 
-function copySyncCode() {
-  const code = document.getElementById('syncCodeDisplay').textContent;
-  navigator.clipboard.writeText(code).then(() => showToast('CODE COPIED TO CLIPBOARD'));
-}
-
-function decodeSyncCode(code) {
-  return decodeData(code);
-}
-
-function importSyncCode() {
+async function gistPush() {
+  const token = localStorage.getItem('github_token');
+  if (!token) { showToast('SET GITHUB TOKEN IN SETTINGS', true); openSettingsModal(); return; }
+  showToast('PUSHING TO GIST...');
+  const gistId = localStorage.getItem('gist_id');
+  const content = JSON.stringify(data, null, 2);
   try {
-    const code = document.getElementById('syncCodeInput').value;
-    const imported = decodeSyncCode(code);
-    if (!Array.isArray(imported)) throw new Error();
-    if (!confirm(`CONFIRM OVERWRITE: This will replace your ${data.length} entries with ${imported.length} imported entries.`)) return;
-    data = imported;
-    save();
-    renderTable();
-    closeSyncModal();
-    showToast(`LOADED ${data.length} UNITS FROM SYNC CODE`);
-  } catch {
-    showToast('INVALID SYNC CODE', true);
-  }
-}
-
-function mergeSyncCode() {
-  try {
-    const code = document.getElementById('syncCodeInput').value;
-    const imported = decodeSyncCode(code);
-    if (!Array.isArray(imported)) throw new Error();
-    const existingIds = new Set(data.map(d => d.id));
-    let added = 0;
-    for (const entry of imported) {
-      if (!existingIds.has(entry.id)) {
-        data.push({ ...entry, id: entry.id || genId() });
-        added++;
-      }
+    let res;
+    if (gistId) {
+      res = await fetch(`https://api.github.com/gists/${gistId}`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ files: { [GIST_FILENAME]: { content } } })
+      });
+    } else {
+      res = await fetch('https://api.github.com/gists', {
+        method: 'POST',
+        headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          description: 'Model Kit Inventory — Gunpla Backlog Tracker',
+          public: false,
+          files: { [GIST_FILENAME]: { content } }
+        })
+      });
     }
+    if (res.status === 401) { showToast('INVALID TOKEN — CHECK SETTINGS', true); return; }
+    if (!res.ok) throw new Error(`GitHub error ${res.status}`);
+    const json = await res.json();
+    localStorage.setItem('gist_id', json.id);
+    updateSyncModalStatus();
+    updateGithubStatus();
+    showToast(`PUSHED — ${data.length} ENTRIES SAVED`);
+  } catch { showToast('PUSH FAILED — CHECK CONNECTION', true); }
+}
+
+async function gistPull() {
+  const token = localStorage.getItem('github_token');
+  const gistId = localStorage.getItem('gist_id');
+  if (!token) { showToast('SET GITHUB TOKEN IN SETTINGS', true); openSettingsModal(); return; }
+  if (!gistId) { showToast('NO GIST FOUND — PUSH FIRST', true); return; }
+  showToast('PULLING FROM GIST...');
+  try {
+    const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+      headers: { 'Authorization': `token ${token}` }
+    });
+    if (res.status === 401) { showToast('INVALID TOKEN — CHECK SETTINGS', true); return; }
+    if (res.status === 404) { showToast('GIST NOT FOUND — PUSH FIRST', true); return; }
+    if (!res.ok) throw new Error();
+    const json = await res.json();
+    const fileContent = json.files?.[GIST_FILENAME]?.content;
+    if (!fileContent) throw new Error();
+    const pulled = JSON.parse(fileContent);
+    if (!Array.isArray(pulled)) throw new Error();
+    data = pulled;
     save();
     renderTable();
     closeSyncModal();
-    showToast(`MERGED: ${added} NEW UNITS ADDED`);
-  } catch {
-    showToast('INVALID SYNC CODE', true);
-  }
+    showToast(`PULLED — ${data.length} ENTRIES LOADED`);
+  } catch { showToast('PULL FAILED — CHECK CONNECTION', true); }
 }
 
 function showToast(msg, isError = false) {
@@ -1740,10 +1767,9 @@ document.getElementById('entryModal').addEventListener('click', function(e) {
 document.getElementById('syncModal').addEventListener('click', function(e) {
   if (e.target === this) closeSyncModal();
 });
-
-// Init
 load();
 data = data.map((d, i) => ({ no: i + 1, ...d }));
+updateGithubStatus();
 renderTable();
 </script>
 </body>
