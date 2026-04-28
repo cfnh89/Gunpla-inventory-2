@@ -1714,20 +1714,30 @@ async function gistPull() {
   if (!gistId) { showToast('NO GIST FOUND — ENTER GIST ID IN SETTINGS', true); openSettingsModal(); return; }
   showToast('PULLING FROM GIST...');
   try {
-    const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+    // First get the gist metadata to find the raw URL
+    const metaRes = await fetch(`https://api.github.com/gists/${gistId}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Accept': 'application/vnd.github+json',
         'X-GitHub-Api-Version': '2022-11-28'
       }
     });
-    if (res.status === 401) { showToast('INVALID TOKEN — CHECK SETTINGS', true); return; }
-    if (res.status === 404) { showToast('GIST NOT FOUND — CHECK GIST ID', true); return; }
-    if (!res.ok) { showToast(`PULL FAILED — HTTP ${res.status}`, true); return; }
-    const json = await res.json();
-    const fileContent = json.files?.[GIST_FILENAME]?.content;
-    if (!fileContent) { showToast('FILE NOT FOUND IN GIST', true); return; }
-    const pulled = JSON.parse(fileContent);
+    if (metaRes.status === 401) { showToast('INVALID TOKEN — CHECK SETTINGS', true); return; }
+    if (metaRes.status === 404) { showToast('GIST NOT FOUND — CHECK GIST ID', true); return; }
+    if (!metaRes.ok) { showToast(`PULL FAILED — HTTP ${metaRes.status}`, true); return; }
+
+    const meta = await metaRes.json();
+    const rawUrl = meta.files?.[GIST_FILENAME]?.raw_url;
+    if (!rawUrl) { showToast('FILE NOT FOUND IN GIST', true); return; }
+
+    // Fetch raw content directly — no size limit
+    const rawRes = await fetch(rawUrl, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!rawRes.ok) { showToast(`RAW FETCH FAILED — HTTP ${rawRes.status}`, true); return; }
+
+    const text = await rawRes.text();
+    const pulled = JSON.parse(text);
     if (!Array.isArray(pulled)) { showToast('INVALID DATA FORMAT', true); return; }
     data = pulled;
     save();
