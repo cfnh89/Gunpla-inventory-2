@@ -1062,7 +1062,7 @@
           <div class="img-upload-area" id="imgUploadArea" onclick="document.getElementById('fImage').click()">
             <div class="img-upload-placeholder" id="imgPlaceholder">
               <div style="font-size:22px;margin-bottom:6px;opacity:0.4">⊕</div>
-              <div>CLICK OR DROP IMAGE</div>
+              <div>CLICK, DROP, OR PASTE IMAGE</div>
             </div>
             <img id="imgPreview" class="img-preview" src="" alt="preview" style="display:none">
             <button class="img-clear-btn" id="imgClearBtn" onclick="clearImage(event)" style="display:none">✕</button>
@@ -1605,7 +1605,7 @@ document.getElementById('imagePickerModal').addEventListener('click', function(e
   if (e.target === this) closeImagePicker();
 });
 
-// Drag & drop on image upload area
+// Drag & drop and paste on image upload area
 document.addEventListener('DOMContentLoaded', () => {
   const area = document.getElementById('imgUploadArea');
   area.addEventListener('dragover', e => { e.preventDefault(); area.classList.add('drag-over'); });
@@ -1621,6 +1621,24 @@ document.addEventListener('DOMContentLoaded', () => {
       handleImageUpload({ target: { files: [file] } });
     }
   });
+});
+
+// Global paste listener — works anywhere when entry modal is open
+document.addEventListener('paste', e => {
+  const modal = document.getElementById('entryModal');
+  if (!modal.classList.contains('open')) return;
+
+  const items = (e.clipboardData || e.originalEvent?.clipboardData)?.items;
+  if (!items) return;
+
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      e.preventDefault();
+      const file = item.getAsFile();
+      if (file) handleImageUpload({ target: { files: [file] } });
+      break;
+    }
+  }
 });
 
 // SYNC — minified keys + LZString compression
