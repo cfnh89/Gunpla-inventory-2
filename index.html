@@ -1089,15 +1089,15 @@
     </div>
     <div class="modal-body">
       <div class="form-group" style="margin-bottom:6px;">
-        <label class="form-label">SerpApi Key</label>
+        <label class="form-label">Cloudflare Worker URL</label>
         <div style="display:flex;gap:8px;">
-          <input class="form-input" type="password" id="bingApiKeyInput" placeholder="Paste your SerpApi key here..." style="flex:1;">
+          <input class="form-input" type="text" id="bingApiKeyInput" placeholder="https://your-worker.workers.dev" style="flex:1;">
           <button class="btn btn-primary" onclick="saveBingKey()" style="white-space:nowrap;">SAVE</button>
         </div>
       </div>
       <div class="sync-note" style="margin-top:10px;">
-        Get a free key (100 searches/month, no credit card) from <strong>serpapi.com</strong> → sign up → your API key is on the Dashboard immediately.
-        <br><br>Your key is stored only in your browser's local storage and never sent anywhere except SerpApi.
+        Deploy the included <strong>cloudflare-worker.js</strong> to Cloudflare Workers (free), paste your SerpApi key inside it, then paste the worker URL here.
+        <br><br>The worker URL is stored only in your browser's local storage.
       </div>
       <div id="bingKeyStatus" style="font-family:'Share Tech Mono',monospace;font-size:11px;margin-top:10px;"></div>
     </div>
@@ -1466,7 +1466,7 @@ function closeImageViewer() {
 
 // SETTINGS
 function openSettingsModal() {
-  const key = localStorage.getItem('serpapi_key') || '';
+  const key = localStorage.getItem('worker_url') || '';
   document.getElementById('bingApiKeyInput').value = key;
   updateBingKeyStatus();
   document.getElementById('settingsModal').classList.add('open');
@@ -1479,23 +1479,21 @@ function closeSettingsModal() {
 function saveBingKey() {
   const key = document.getElementById('bingApiKeyInput').value.trim();
   if (!key) {
-    localStorage.removeItem('serpapi_key');
+    localStorage.removeItem('worker_url');
     updateBingKeyStatus();
-    showToast('API KEY CLEARED');
+    showToast('WORKER URL CLEARED');
     return;
   }
-  localStorage.setItem('serpapi_key', key);
+  localStorage.setItem('worker_url', key);
   updateBingKeyStatus();
-  showToast('API KEY SAVED');
+  showToast('WORKER URL SAVED');
 }
 
 function updateBingKeyStatus() {
-  const key = localStorage.getItem('serpapi_key');
+  const key = localStorage.getItem('worker_url');
   const el = document.getElementById('bingKeyStatus');
   if (el) {
-    el.textContent = key
-      ? `// KEY SET: ${key.slice(0,4)}${'•'.repeat(8)}${key.slice(-4)}`
-      : '// NO KEY SET — AUTO-FIND DISABLED';
+    el.textContent = key ? `// WORKER: ${key}` : '// NO WORKER URL SET — AUTO-FIND DISABLED';
     el.style.color = key ? 'var(--accent-green)' : 'var(--accent-red)';
   }
 }
@@ -1512,9 +1510,9 @@ async function autoFindImage() {
 
   if (!modelVal) { showToast('ENTER MODEL NAME FIRST', true); return; }
 
-  const bingKey = localStorage.getItem('serpapi_key');
+  const bingKey = localStorage.getItem('worker_url');
   if (!bingKey) {
-    showToast('ADD BING API KEY IN SETTINGS FIRST', true);
+    showToast('ADD WORKER URL IN SETTINGS FIRST', true);
     openSettingsModal();
     return;
   }
@@ -1527,20 +1525,19 @@ async function autoFindImage() {
   const query = [brandVal, scaleVal, modelVal, 'model kit box art'].filter(Boolean).join(' ');
 
   try {
-    const res = await fetch(
-      `https://serpapi.com/search.json?engine=google_images&q=${encodeURIComponent(query)}&num=9&safe=active&api_key=${bingKey}`
-    );
+    const workerBase = bingKey.replace(/\/$/, '');
+    const res = await fetch(`${workerBase}?q=${encodeURIComponent(query)}`);
 
-    if (res.status === 401 || res.status === 403) { showToast('INVALID API KEY — CHECK SETTINGS', true); openSettingsModal(); return; }
-    if (!res.ok) throw new Error(`SerpApi error ${res.status}`);
+    if (res.status === 401 || res.status === 403) { showToast('WORKER ERROR — CHECK URL', true); openSettingsModal(); return; }
+    if (!res.ok) throw new Error(`Worker error ${res.status}`);
 
     const json = await res.json();
-    const urls = (json.images_results || []).map(img => img.original).filter(Boolean);
+    const urls = (json.images || []).map(img => img.url).filter(Boolean);
     if (!urls.length) throw new Error('No images found');
 
     openImagePicker(urls);
   } catch (err) {
-    showToast('SEARCH FAILED — CHECK SERPAPI KEY', true);
+    showToast('SEARCH FAILED — CHECK WORKER URL', true);
   } finally {
     btn.disabled = false;
     btnText.textContent = '⚡ AUTO-FIND';
