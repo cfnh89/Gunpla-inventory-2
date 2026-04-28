@@ -1707,24 +1707,58 @@ function updateSyncModalStatus() {
   gistDisplay.textContent = gistId ? `Gist ID: ${gistId}` : '';
 }
 
+async function gistPull() {
+  const token = localStorage.getItem('github_token');
+  const gistId = localStorage.getItem('gist_id');
+  if (!token) { showToast('SET GITHUB TOKEN IN SETTINGS', true); openSettingsModal(); return; }
+  if (!gistId) { showToast('NO GIST FOUND — ENTER GIST ID IN SETTINGS', true); openSettingsModal(); return; }
+  showToast('PULLING FROM GIST...');
+  try {
+    const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28'
+      }
+    });
+    if (res.status === 401) { showToast('INVALID TOKEN — CHECK SETTINGS', true); return; }
+    if (res.status === 404) { showToast('GIST NOT FOUND — CHECK GIST ID', true); return; }
+    if (!res.ok) { showToast(`PULL FAILED — HTTP ${res.status}`, true); return; }
+    const json = await res.json();
+    const fileContent = json.files?.[GIST_FILENAME]?.content;
+    if (!fileContent) { showToast('FILE NOT FOUND IN GIST', true); return; }
+    const pulled = JSON.parse(fileContent);
+    if (!Array.isArray(pulled)) { showToast('INVALID DATA FORMAT', true); return; }
+    data = pulled;
+    save();
+    renderTable();
+    closeSyncModal();
+    showToast(`PULLED — ${data.length} ENTRIES LOADED`);
+  } catch (err) { showToast(`PULL FAILED — ${err.message}`, true); }
+}
+
 async function gistPush() {
   const token = localStorage.getItem('github_token');
   if (!token) { showToast('SET GITHUB TOKEN IN SETTINGS', true); openSettingsModal(); return; }
   showToast('PUSHING TO GIST...');
   const gistId = localStorage.getItem('gist_id');
   const content = JSON.stringify(data, null, 2);
+  const headers = {
+    'Authorization': `Bearer ${token}`,
+    'Accept': 'application/vnd.github+json',
+    'Content-Type': 'application/json',
+    'X-GitHub-Api-Version': '2022-11-28'
+  };
   try {
     let res;
     if (gistId) {
       res = await fetch(`https://api.github.com/gists/${gistId}`, {
-        method: 'PATCH',
-        headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+        method: 'PATCH', headers,
         body: JSON.stringify({ files: { [GIST_FILENAME]: { content } } })
       });
     } else {
       res = await fetch('https://api.github.com/gists', {
-        method: 'POST',
-        headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+        method: 'POST', headers,
         body: JSON.stringify({
           description: 'Model Kit Inventory — Gunpla Backlog Tracker',
           public: false,
@@ -1733,39 +1767,16 @@ async function gistPush() {
       });
     }
     if (res.status === 401) { showToast('INVALID TOKEN — CHECK SETTINGS', true); return; }
-    if (!res.ok) throw new Error(`GitHub error ${res.status}`);
+    if (!res.ok) { showToast(`PUSH FAILED — HTTP ${res.status}`, true); return; }
     const json = await res.json();
     localStorage.setItem('gist_id', json.id);
+    // Also update the gist ID field if settings is open
+    const gistInput = document.getElementById('gistIdInput');
+    if (gistInput) gistInput.value = json.id;
     updateSyncModalStatus();
     updateGithubStatus();
     showToast(`PUSHED — ${data.length} ENTRIES SAVED`);
-  } catch { showToast('PUSH FAILED — CHECK CONNECTION', true); }
-}
-
-async function gistPull() {
-  const token = localStorage.getItem('github_token');
-  const gistId = localStorage.getItem('gist_id');
-  if (!token) { showToast('SET GITHUB TOKEN IN SETTINGS', true); openSettingsModal(); return; }
-  if (!gistId) { showToast('NO GIST FOUND — PUSH FIRST', true); return; }
-  showToast('PULLING FROM GIST...');
-  try {
-    const res = await fetch(`https://api.github.com/gists/${gistId}`, {
-      headers: { 'Authorization': `token ${token}` }
-    });
-    if (res.status === 401) { showToast('INVALID TOKEN — CHECK SETTINGS', true); return; }
-    if (res.status === 404) { showToast('GIST NOT FOUND — PUSH FIRST', true); return; }
-    if (!res.ok) throw new Error();
-    const json = await res.json();
-    const fileContent = json.files?.[GIST_FILENAME]?.content;
-    if (!fileContent) throw new Error();
-    const pulled = JSON.parse(fileContent);
-    if (!Array.isArray(pulled)) throw new Error();
-    data = pulled;
-    save();
-    renderTable();
-    closeSyncModal();
-    showToast(`PULLED — ${data.length} ENTRIES LOADED`);
-  } catch { showToast('PULL FAILED — CHECK CONNECTION', true); }
+  } catch (err) { showToast(`PUSH FAILED — ${err.message}`, true); }
 }
 
 function showToast(msg, isError = false) {
