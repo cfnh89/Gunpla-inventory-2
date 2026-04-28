@@ -1089,15 +1089,15 @@
     </div>
     <div class="modal-body">
       <div class="form-group" style="margin-bottom:6px;">
-        <label class="form-label">Bing Image Search API Key</label>
+        <label class="form-label">SerpApi Key</label>
         <div style="display:flex;gap:8px;">
-          <input class="form-input" type="password" id="bingApiKeyInput" placeholder="Paste your Bing API key here..." style="flex:1;">
+          <input class="form-input" type="password" id="bingApiKeyInput" placeholder="Paste your SerpApi key here..." style="flex:1;">
           <button class="btn btn-primary" onclick="saveBingKey()" style="white-space:nowrap;">SAVE</button>
         </div>
       </div>
       <div class="sync-note" style="margin-top:10px;">
-        Get a free key (1,000 searches/month) from <strong>portal.azure.com</strong> → Create resource → search "Bing Image Search" → F1 (Free) tier → Keys and Endpoint → Key 1.
-        <br><br>Your key is stored only in your browser's local storage and never sent anywhere except Bing's API.
+        Get a free key (100 searches/month, no credit card) from <strong>serpapi.com</strong> → sign up → your API key is on the Dashboard immediately.
+        <br><br>Your key is stored only in your browser's local storage and never sent anywhere except SerpApi.
       </div>
       <div id="bingKeyStatus" style="font-family:'Share Tech Mono',monospace;font-size:11px;margin-top:10px;"></div>
     </div>
@@ -1466,7 +1466,7 @@ function closeImageViewer() {
 
 // SETTINGS
 function openSettingsModal() {
-  const key = localStorage.getItem('bing_api_key') || '';
+  const key = localStorage.getItem('serpapi_key') || '';
   document.getElementById('bingApiKeyInput').value = key;
   updateBingKeyStatus();
   document.getElementById('settingsModal').classList.add('open');
@@ -1479,18 +1479,18 @@ function closeSettingsModal() {
 function saveBingKey() {
   const key = document.getElementById('bingApiKeyInput').value.trim();
   if (!key) {
-    localStorage.removeItem('bing_api_key');
+    localStorage.removeItem('serpapi_key');
     updateBingKeyStatus();
     showToast('API KEY CLEARED');
     return;
   }
-  localStorage.setItem('bing_api_key', key);
+  localStorage.setItem('serpapi_key', key);
   updateBingKeyStatus();
   showToast('API KEY SAVED');
 }
 
 function updateBingKeyStatus() {
-  const key = localStorage.getItem('bing_api_key');
+  const key = localStorage.getItem('serpapi_key');
   const el = document.getElementById('bingKeyStatus');
   if (el) {
     el.textContent = key
@@ -1512,7 +1512,7 @@ async function autoFindImage() {
 
   if (!modelVal) { showToast('ENTER MODEL NAME FIRST', true); return; }
 
-  const bingKey = localStorage.getItem('bing_api_key');
+  const bingKey = localStorage.getItem('serpapi_key');
   if (!bingKey) {
     showToast('ADD BING API KEY IN SETTINGS FIRST', true);
     openSettingsModal();
@@ -1528,20 +1528,19 @@ async function autoFindImage() {
 
   try {
     const res = await fetch(
-      `https://api.bing.microsoft.com/v7.0/images/search?q=${encodeURIComponent(query)}&count=9&imageType=Photo&safeSearch=Strict`,
-      { headers: { 'Ocp-Apim-Subscription-Key': bingKey } }
+      `https://serpapi.com/search.json?engine=google_images&q=${encodeURIComponent(query)}&num=9&safe=active&api_key=${bingKey}`
     );
 
-    if (res.status === 401) { showToast('INVALID API KEY — CHECK SETTINGS', true); openSettingsModal(); return; }
-    if (!res.ok) throw new Error(`Bing error ${res.status}`);
+    if (res.status === 401 || res.status === 403) { showToast('INVALID API KEY — CHECK SETTINGS', true); openSettingsModal(); return; }
+    if (!res.ok) throw new Error(`SerpApi error ${res.status}`);
 
     const json = await res.json();
-    const urls = (json.value || []).map(img => img.contentUrl).filter(Boolean);
+    const urls = (json.images_results || []).map(img => img.original).filter(Boolean);
     if (!urls.length) throw new Error('No images found');
 
     openImagePicker(urls);
   } catch (err) {
-    showToast('SEARCH FAILED — CHECK API KEY', true);
+    showToast('SEARCH FAILED — CHECK SERPAPI KEY', true);
   } finally {
     btn.disabled = false;
     btnText.textContent = '⚡ AUTO-FIND';
