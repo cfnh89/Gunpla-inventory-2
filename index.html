@@ -875,6 +875,176 @@
     box-shadow: 0 0 40px rgba(0,0,0,0.6);
     cursor: default;
   }
+  /* PAGE NAV */
+  .page-nav {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid var(--border-panel);
+    margin-bottom: 24px;
+  }
+
+  .page-tab {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 12px 24px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .page-tab:hover { color: var(--text-primary); }
+  .page-tab.active { color: var(--accent-cyan); border-bottom-color: var(--accent-cyan); }
+
+  /* QMSV CHECKLIST */
+  .qmsv-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 40px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-panel);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .qmsv-list::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+    opacity: 0.5;
+  }
+
+  .qmsv-list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border-panel);
+    background: var(--bg-card);
+  }
+
+  .qmsv-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--hud-line);
+    transition: background 0.1s;
+  }
+
+  .qmsv-row:last-child { border-bottom: none; }
+  .qmsv-row:nth-child(even) { background: var(--bg-row-alt); }
+  .qmsv-row:hover { background: var(--accent-cyan-dim); }
+  .qmsv-row.owned { }
+  .qmsv-row.missing { opacity: 0.55; }
+
+  .qmsv-check {
+    width: 22px;
+    height: 22px;
+    border-radius: 2px;
+    border: 2px solid var(--border-panel);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.15s;
+    font-size: 13px;
+    color: transparent;
+    background: var(--bg-card);
+  }
+
+  .qmsv-row.owned .qmsv-check {
+    background: var(--accent-green);
+    border-color: var(--accent-green);
+    color: white;
+  }
+
+  .qmsv-check:hover { border-color: var(--accent-green); }
+
+  .qmsv-thumb-small {
+    width: 36px;
+    height: 36px;
+    object-fit: cover;
+    border-radius: 2px;
+    border: 1px solid var(--border-panel);
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+
+  .qmsv-thumb-small:hover { border-color: var(--accent-cyan); }
+
+  .qmsv-thumb-empty {
+    width: 36px;
+    height: 36px;
+    border: 1px dashed var(--border-panel);
+    border-radius: 2px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 12px;
+    opacity: 0.35;
+  }
+
+  .qmsv-row-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .qmsv-row-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+
+  .qmsv-row-meta {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 2px;
+    flex-wrap: wrap;
+  }
+
+  .qmsv-row-series {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+  }
+
+  .qmsv-row-variant {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--accent-amber);
+    letter-spacing: 1px;
+  }
+
+  .qmsv-row-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .qmsv-empty {
+    text-align: center;
+    padding: 60px 20px;
+  }
+
 </style>
 </head>
 <body>
@@ -896,6 +1066,19 @@
       <span>SYS ONLINE</span>
     </div>
   </header>
+
+  <!-- PAGE NAV -->
+  <div class="page-nav">
+    <button class="page-tab active" id="tabBacklog" onclick="switchPage('backlog')">
+      ◈ BACKLOG
+    </button>
+    <button class="page-tab" id="tabQmsv" onclick="switchPage('qmsv')">
+      ◈ QMSV COLLECTION
+    </button>
+  </div>
+
+  <!-- PAGE: BACKLOG -->
+  <div id="pagBacklog">
 
   <!-- TOOLBAR -->
   <div class="toolbar">
@@ -997,9 +1180,65 @@
       <div class="stat-label">// Backlog Value (MYR)</div>
       <div class="stat-value" id="totalValue">0.00</div>
     </div>
-  </div>
+  </div> <!-- end totals-bar -->
 
-</div>
+  </div> <!-- end pagBacklog -->
+
+  <!-- PAGE: QMSV COLLECTION -->
+  <div id="pagQmsv" style="display:none;">
+
+    <!-- QMSV TOOLBAR -->
+    <div class="toolbar">
+      <div class="toolbar-group">
+        <button class="btn btn-primary" onclick="openQmsvAddModal()">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/></svg>
+          ADD FIGURE
+        </button>
+      </div>
+      <div class="toolbar-divider"></div>
+      <div class="toolbar-group">
+        <label class="sort-label">FILTER</label>
+        <select class="sort-select" id="qmsvFilter" onchange="renderQmsv()">
+          <option value="all">All</option>
+          <option value="owned">Owned</option>
+          <option value="missing">Not Owned</option>
+        </select>
+      </div>
+      <div class="toolbar-divider"></div>
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input type="text" id="qmsvSearch" placeholder="SEARCH NAME / SERIES..." oninput="renderQmsv()">
+      </div>
+    </div>
+
+    <!-- QMSV STATS -->
+    <div class="totals-bar" style="margin-bottom:20px;">
+      <div class="stat-card cyan">
+        <div class="stat-label">// Total Figures</div>
+        <div class="stat-value" id="qmsvTotal">0</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">// Owned</div>
+        <div class="stat-value" id="qmsvOwned">0</div>
+      </div>
+      <div class="stat-card amber">
+        <div class="stat-label">// Missing</div>
+        <div class="stat-value" id="qmsvMissing">0</div>
+      </div>
+    </div>
+
+    <!-- QMSV CHECKLIST -->
+    <div class="qmsv-list" id="qmsvGrid">
+      <div class="qmsv-list-header">
+        <div class="table-title">// QMSV FIGURE LOG</div>
+        <div class="table-count" id="qmsvListCount">0 FIGURES</div>
+      </div>
+      <div id="qmsvListBody"></div>
+    </div>
+
+  </div> <!-- end pagQmsv -->
+
+</div> <!-- end wrapper -->
 
 <!-- ADD/EDIT MODAL -->
 <div class="modal-backdrop" id="entryModal">
@@ -1073,6 +1312,74 @@
     <div class="modal-footer">
       <button class="btn" onclick="closeModal()" style="border-color:var(--border-panel);color:var(--text-secondary)">CANCEL</button>
       <button class="btn btn-primary" onclick="saveEntry()">SAVE ENTRY</button>
+    </div>
+  </div>
+</div>
+
+<!-- QMSV ADD/EDIT MODAL -->
+<div class="modal-backdrop" id="qmsvModal">
+  <div class="modal">
+    <div class="corner-deco tl"></div><div class="corner-deco tr"></div>
+    <div class="corner-deco bl"></div><div class="corner-deco br"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="qmsvModalTitle">ADD FIGURE</div>
+      <button class="modal-close" onclick="closeQmsvModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group form-full">
+          <label class="form-label">Name</label>
+          <input class="form-input" type="text" id="qfName" placeholder="e.g. RX-78-2 Gundam">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Series</label>
+          <input class="form-input" type="text" id="qfSeries" list="qmsvSeriesList" placeholder="e.g. Mobile Suit Gundam">
+          <datalist id="qmsvSeriesList">
+            <option value="Mobile Suit Gundam">
+            <option value="Zeta Gundam">
+            <option value="Gundam ZZ">
+            <option value="Char's Counterattack">
+            <option value="Gundam Wing">
+            <option value="Gundam SEED">
+            <option value="Gundam 00">
+            <option value="Iron-Blooded Orphans">
+            <option value="Witch from Mercury">
+            <option value="Build Fighters">
+          </datalist>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Variant</label>
+          <input class="form-input" type="text" id="qfVariant" placeholder="e.g. Clear Ver., Metallic">
+        </div>
+        <div class="form-group form-full" style="display:flex;align-items:center;gap:14px;padding:10px 0;">
+          <label class="form-label" style="margin:0;">Owned</label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="qfOwned" style="width:16px;height:16px;accent-color:var(--accent-green);cursor:pointer;">
+            <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-secondary);">I HAVE THIS FIGURE</span>
+          </label>
+        </div>
+        <div class="form-group form-full">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <label class="form-label">Image <span style="color:var(--text-muted);font-size:9px;letter-spacing:1px">(OPTIONAL)</span></label>
+            <button class="btn btn-primary btn-sm" id="qmsvAutoFindBtn" onclick="autoFindQmsvImage()" type="button" style="font-size:10px;padding:4px 10px;letter-spacing:1px;">
+              <span id="qmsvAutoFindBtnText">⚡ AUTO-FIND</span>
+            </button>
+          </div>
+          <div class="img-upload-area" id="qmsvImgUploadArea" onclick="document.getElementById('qfImage').click()">
+            <div class="img-upload-placeholder" id="qmsvImgPlaceholder">
+              <div style="font-size:22px;margin-bottom:6px;opacity:0.4">⊕</div>
+              <div>CLICK, DROP, OR PASTE IMAGE</div>
+            </div>
+            <img id="qmsvImgPreview" class="img-preview" src="" alt="preview" style="display:none">
+            <button class="img-clear-btn" id="qmsvImgClearBtn" onclick="clearQmsvImage(event)" style="display:none">✕</button>
+          </div>
+          <input type="file" id="qfImage" accept="image/*" style="display:none" onchange="handleQmsvImageUpload(event)">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeQmsvModal()" style="border-color:var(--border-panel);color:var(--text-secondary)">CANCEL</button>
+      <button class="btn btn-primary" onclick="saveQmsvEntry()">SAVE FIGURE</button>
     </div>
   </div>
 </div>
@@ -1814,8 +2121,241 @@ document.getElementById('entryModal').addEventListener('click', function(e) {
 document.getElementById('syncModal').addEventListener('click', function(e) {
   if (e.target === this) closeSyncModal();
 });
+
+// PAGE SWITCHING
+function switchPage(page) {
+  document.getElementById('pagBacklog').style.display = page === 'backlog' ? '' : 'none';
+  document.getElementById('pagQmsv').style.display = page === 'qmsv' ? '' : 'none';
+  document.getElementById('tabBacklog').classList.toggle('active', page === 'backlog');
+  document.getElementById('tabQmsv').classList.toggle('active', page === 'qmsv');
+  if (page === 'qmsv') renderQmsv();
+}
+
+// QMSV DATA
+let qmsvData = [];
+let qmsvEditId = null;
+let qmsvCurrentImage = null;
+const QMSV_STORAGE_KEY = 'qmsv_collection_v1';
+
+function loadQmsv() {
+  try {
+    const raw = localStorage.getItem(QMSV_STORAGE_KEY);
+    qmsvData = raw ? JSON.parse(raw) : [];
+  } catch { qmsvData = []; }
+}
+
+function saveQmsv() {
+  localStorage.setItem(QMSV_STORAGE_KEY, JSON.stringify(qmsvData));
+}
+
+function renderQmsv() {
+  const q = (document.getElementById('qmsvSearch')?.value || '').toLowerCase();
+  const filter = document.getElementById('qmsvFilter')?.value || 'all';
+  let rows = qmsvData.filter(d => {
+    const matchQ = (d.name||'').toLowerCase().includes(q) || (d.series||'').toLowerCase().includes(q) || (d.variant||'').toLowerCase().includes(q);
+    const matchF = filter === 'all' || (filter === 'owned' && d.owned) || (filter === 'missing' && !d.owned);
+    return matchQ && matchF;
+  });
+  const total = qmsvData.length;
+  const owned = qmsvData.filter(d => d.owned).length;
+  document.getElementById('qmsvTotal').textContent = total;
+  document.getElementById('qmsvOwned').textContent = owned;
+  document.getElementById('qmsvMissing').textContent = total - owned;
+  document.getElementById('qmsvListCount').textContent = `${rows.length} / ${total} FIGURES`;
+
+  const body = document.getElementById('qmsvListBody');
+  if (rows.length === 0) {
+    body.innerHTML = `<div class="qmsv-empty"><div class="empty-icon">◈</div><div class="empty-text" style="font-family:'Share Tech Mono',monospace;color:var(--text-muted);font-size:12px;letter-spacing:2px;">NO FIGURES FOUND</div></div>`;
+    return;
+  }
+  body.innerHTML = rows.map(d => `
+    <div class="qmsv-row ${d.owned ? 'owned' : 'missing'}">
+      <div class="qmsv-check" onclick="toggleQmsvOwned('${d.id}')" title="${d.owned ? 'Mark as not owned' : 'Mark as owned'}">✓</div>
+      ${d.image
+        ? `<img class="qmsv-thumb-small" src="${d.image}" onclick="openQmsvImageViewer('${d.id}')" title="View image">`
+        : `<div class="qmsv-thumb-empty">◈</div>`}
+      <div class="qmsv-row-info">
+        <div class="qmsv-row-name">${escHtml(d.name)}</div>
+        <div class="qmsv-row-meta">
+          ${d.series ? `<span class="qmsv-row-series">${escHtml(d.series)}</span>` : ''}
+          ${d.variant ? `<span class="qmsv-row-variant">${escHtml(d.variant)}</span>` : ''}
+        </div>
+      </div>
+      <div class="qmsv-row-actions">
+        <button class="btn btn-primary btn-sm btn-icon" onclick="openQmsvEditModal('${d.id}')" title="Edit">✎</button>
+        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteQmsvEntry('${d.id}')" title="Delete">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openQmsvAddModal() {
+  qmsvEditId = null;
+  document.getElementById('qmsvModalTitle').textContent = 'ADD FIGURE';
+  document.getElementById('qfName').value = '';
+  document.getElementById('qfSeries').value = '';
+  document.getElementById('qfVariant').value = '';
+  document.getElementById('qfOwned').checked = false;
+  resetQmsvImageUI(null);
+  document.getElementById('qmsvModal').classList.add('open');
+}
+
+function openQmsvEditModal(id) {
+  const entry = qmsvData.find(d => d.id === id);
+  if (!entry) return;
+  qmsvEditId = id;
+  document.getElementById('qmsvModalTitle').textContent = 'EDIT FIGURE';
+  document.getElementById('qfName').value = entry.name || '';
+  document.getElementById('qfSeries').value = entry.series || '';
+  document.getElementById('qfVariant').value = entry.variant || '';
+  document.getElementById('qfOwned').checked = !!entry.owned;
+  resetQmsvImageUI(entry.image || null);
+  document.getElementById('qmsvModal').classList.add('open');
+}
+
+function closeQmsvModal() { document.getElementById('qmsvModal').classList.remove('open'); }
+
+function saveQmsvEntry() {
+  const name = document.getElementById('qfName').value.trim();
+  if (!name) { showToast('NAME IS REQUIRED', true); return; }
+  const entry = {
+    name,
+    series: document.getElementById('qfSeries').value.trim(),
+    variant: document.getElementById('qfVariant').value.trim(),
+    owned: document.getElementById('qfOwned').checked,
+    image: qmsvCurrentImage || null,
+  };
+  if (qmsvEditId) {
+    const idx = qmsvData.findIndex(d => d.id === qmsvEditId);
+    if (idx !== -1) qmsvData[idx] = { ...qmsvData[idx], ...entry };
+    showToast('FIGURE UPDATED');
+  } else {
+    qmsvData.push({ id: genId(), ...entry });
+    showToast('FIGURE ADDED');
+  }
+  saveQmsv(); renderQmsv(); closeQmsvModal();
+}
+
+function toggleQmsvOwned(id) {
+  const entry = qmsvData.find(d => d.id === id);
+  if (!entry) return;
+  entry.owned = !entry.owned;
+  saveQmsv(); renderQmsv();
+  showToast(entry.owned ? 'MARKED AS OWNED' : 'MARKED AS NOT OWNED');
+}
+
+function deleteQmsvEntry(id) {
+  if (!confirm('Delete this figure?')) return;
+  qmsvData = qmsvData.filter(d => d.id !== id);
+  saveQmsv(); renderQmsv();
+  showToast('FIGURE REMOVED');
+}
+
+function resetQmsvImageUI(existingImage = null) {
+  qmsvCurrentImage = existingImage;
+  const preview = document.getElementById('qmsvImgPreview');
+  const placeholder = document.getElementById('qmsvImgPlaceholder');
+  const clearBtn = document.getElementById('qmsvImgClearBtn');
+  document.getElementById('qfImage').value = '';
+  if (existingImage) {
+    preview.src = existingImage; preview.style.display = 'block';
+    placeholder.style.display = 'none'; clearBtn.style.display = 'flex';
+  } else {
+    preview.src = ''; preview.style.display = 'none';
+    placeholder.style.display = 'block'; clearBtn.style.display = 'none';
+  }
+}
+
+function handleQmsvImageUpload(evt) {
+  const file = evt.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 400; const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale); canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+      qmsvCurrentImage = dataUrl;
+      document.getElementById('qmsvImgPreview').src = dataUrl;
+      document.getElementById('qmsvImgPreview').style.display = 'block';
+      document.getElementById('qmsvImgPlaceholder').style.display = 'none';
+      document.getElementById('qmsvImgClearBtn').style.display = 'flex';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearQmsvImage(e) { e.stopPropagation(); resetQmsvImageUI(null); }
+
+function openQmsvImageViewer(id) {
+  const entry = qmsvData.find(d => d.id === id);
+  if (!entry || !entry.image) return;
+  document.getElementById('imgViewerImg').src = entry.image;
+  document.getElementById('imgViewer').classList.add('open');
+}
+
+async function autoFindQmsvImage() {
+  const name = document.getElementById('qfName').value.trim();
+  const series = document.getElementById('qfSeries').value.trim();
+  const variant = document.getElementById('qfVariant').value.trim();
+  if (!name) { showToast('ENTER NAME FIRST', true); return; }
+  const workerUrl = localStorage.getItem('worker_url');
+  if (!workerUrl) { showToast('ADD WORKER URL IN SETTINGS FIRST', true); openSettingsModal(); return; }
+  const btn = document.getElementById('qmsvAutoFindBtn');
+  const btnText = document.getElementById('qmsvAutoFindBtnText');
+  btn.disabled = true; btnText.textContent = '⟳ SEARCHING...';
+  const query = ['QMSV mini', series, name, variant].filter(Boolean).join(' ');
+  try {
+    const res = await fetch(`${workerUrl.replace(/\/$/, '')}?q=${encodeURIComponent(query)}`);
+    if (!res.ok) throw new Error();
+    const json = await res.json();
+    const urls = (json.images || []).map(img => img.url).filter(Boolean);
+    if (!urls.length) throw new Error();
+    openImagePicker(urls);
+  } catch { showToast('SEARCH FAILED', true); }
+  finally { btn.disabled = false; btnText.textContent = '⚡ AUTO-FIND'; }
+}
+
+// QMSV paste support
+document.addEventListener('paste', e => {
+  const modal = document.getElementById('qmsvModal');
+  if (!modal.classList.contains('open')) return;
+  const items = (e.clipboardData || e.originalEvent?.clipboardData)?.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      e.preventDefault();
+      const file = item.getAsFile();
+      if (file) handleQmsvImageUpload({ target: { files: [file] } });
+      break;
+    }
+  }
+});
+
+document.getElementById('qmsvModal').addEventListener('click', function(e) {
+  if (e.target === this) closeQmsvModal();
+});
+
+// QMSV drag & drop
+document.addEventListener('DOMContentLoaded', () => {
+  const area = document.getElementById('qmsvImgUploadArea');
+  if (!area) return;
+  area.addEventListener('dragover', e => { e.preventDefault(); area.classList.add('drag-over'); });
+  area.addEventListener('dragleave', () => area.classList.remove('drag-over'));
+  area.addEventListener('drop', e => {
+    e.preventDefault(); area.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) handleQmsvImageUpload({ target: { files: [file] } });
+  });
+});
+
 load();
 data = data.map((d, i) => ({ no: i + 1, ...d }));
+loadQmsv();
 updateGithubStatus();
 renderTable();
 </script>
