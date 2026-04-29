@@ -1045,6 +1045,105 @@
     padding: 60px 20px;
   }
 
+  /* QMSV CARD VIEW */
+  .qmsv-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 40px;
+  }
+
+  .qmsv-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-panel);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+    transition: transform 0.15s, border-color 0.15s;
+    cursor: default;
+  }
+
+  .qmsv-card:hover { transform: translateY(-2px); border-color: var(--accent-cyan); }
+  .qmsv-card.owned { border-color: var(--accent-green); }
+  .qmsv-card.missing { opacity: 0.6; }
+
+  .qmsv-card-owned-badge {
+    position: absolute;
+    top: 7px; right: 7px;
+    width: 22px; height: 22px;
+    background: var(--accent-green);
+    color: white;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    cursor: pointer;
+  }
+
+  .qmsv-card-no-badge {
+    position: absolute;
+    top: 7px; right: 7px;
+    width: 22px; height: 22px;
+    background: rgba(255,255,255,0.7);
+    border: 2px solid var(--border-panel);
+    border-radius: 50%;
+    z-index: 2;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+
+  .qmsv-card-no-badge:hover { border-color: var(--accent-green); }
+
+  .qmsv-card-img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    display: block;
+    background: var(--bg-card);
+    cursor: pointer;
+  }
+
+  .qmsv-card-no-img {
+    width: 100%;
+    aspect-ratio: 1;
+    background: var(--bg-card);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 36px;
+    opacity: 0.25;
+  }
+
+  .qmsv-card-body {
+    padding: 10px 10px 6px;
+  }
+
+  .qmsv-card-series {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+    margin-bottom: 3px;
+  }
+
+  .qmsv-card-variant {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--accent-amber);
+    letter-spacing: 1px;
+  }
+
+  .qmsv-card-actions {
+    display: flex;
+    gap: 4px;
+    padding: 0 8px 8px;
+  }
+
 </style>
 </head>
 <body>
@@ -1061,9 +1160,19 @@
       <div class="hdec-label">DATA LINK ACTIVE</div>
       <div class="hdec-line" style="max-width:60px;"></div>
     </div>
-    <div class="system-status">
-      <div class="status-dot"></div>
-      <span>SYS ONLINE</span>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="system-status">
+        <div class="status-dot"></div>
+        <span>SYS ONLINE</span>
+      </div>
+      <button class="btn btn-green" onclick="openSyncModal()" style="padding:6px 12px;">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 6a5 5 0 0 1 9-3M11 6a5 5 0 0 1-9 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/><path d="M9 1l1 2-2 1M3 8l-1 2 2 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/></svg>
+        SYNC
+      </button>
+      <button class="btn" onclick="openSettingsModal()" style="border-color:var(--border-panel);color:var(--text-secondary);padding:6px 12px;">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="2" stroke="currentColor" stroke-width="1.5"/><path d="M6 1v1M6 10v1M1 6h1M10 6h1M2.5 2.5l.7.7M8.8 8.8l.7.7M9.5 2.5l-.7.7M3.2 8.8l-.7.7" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/></svg>
+        SETTINGS
+      </button>
     </div>
   </header>
 
@@ -1102,16 +1211,9 @@
     </div>
     <div class="toolbar-divider"></div>
     <div class="toolbar-group">
-      <button class="btn btn-green" onclick="openSyncModal()">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 6a5 5 0 0 1 9-3M11 6a5 5 0 0 1-9 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/><path d="M9 1l1 2-2 1M3 8l-1 2 2 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/></svg>
-        SYNC
-      </button>
-    </div>
-    <div class="toolbar-divider"></div>
-    <div class="toolbar-group">
-      <button class="btn" onclick="openSettingsModal()" style="border-color:var(--border-panel);color:var(--text-secondary);">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="2" stroke="currentColor" stroke-width="1.5"/><path d="M6 1v1M6 10v1M1 6h1M10 6h1M2.5 2.5l.7.7M8.8 8.8l.7.7M9.5 2.5l-.7.7M3.2 8.8l-.7.7" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/></svg>
-        SETTINGS
+      <button class="btn btn-primary" onclick="saveArrangement()" title="Save current sort order as the default arrangement" style="border-color:var(--accent-cyan);color:var(--accent-cyan);">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1h7l3 3v7H1V1z" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/><path d="M3 1v3h5V1M3 11V7h6v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/></svg>
+        SAVE ORDER
       </button>
     </div>
     <div class="toolbar-divider"></div>
@@ -1197,6 +1299,16 @@
       </div>
       <div class="toolbar-divider"></div>
       <div class="toolbar-group">
+        <label class="sort-label">VIEW</label>
+        <button class="btn btn-sm" id="qmsvViewList" onclick="setQmsvView('list')" style="border-color:var(--accent-cyan);color:var(--accent-cyan);">
+          ☰ LIST
+        </button>
+        <button class="btn btn-sm" id="qmsvViewCard" onclick="setQmsvView('card')" style="border-color:var(--border-panel);color:var(--text-muted);">
+          ⊞ CARDS
+        </button>
+      </div>
+      <div class="toolbar-divider"></div>
+      <div class="toolbar-group">
         <label class="sort-label">FILTER</label>
         <select class="sort-select" id="qmsvFilter" onchange="renderQmsv()">
           <option value="all">All</option>
@@ -1227,14 +1339,8 @@
       </div>
     </div>
 
-    <!-- QMSV CHECKLIST -->
-    <div class="qmsv-list" id="qmsvGrid">
-      <div class="qmsv-list-header">
-        <div class="table-title">// QMSV FIGURE LOG</div>
-        <div class="table-count" id="qmsvListCount">0 FIGURES</div>
-      </div>
-      <div id="qmsvListBody"></div>
-    </div>
+    <!-- QMSV CONTENT -->
+    <div id="qmsvContent"></div>
 
   </div> <!-- end pagQmsv -->
 
@@ -2163,6 +2269,39 @@ function saveQmsv() {
   }
 }
 
+let qmsvView = localStorage.getItem('qmsv_view') || 'list';
+
+function setQmsvView(v) {
+  qmsvView = v;
+  localStorage.setItem('qmsv_view', v);
+  const listBtn = document.getElementById('qmsvViewList');
+  const cardBtn = document.getElementById('qmsvViewCard');
+  if (listBtn) { listBtn.style.borderColor = v === 'list' ? 'var(--accent-cyan)' : 'var(--border-panel)'; listBtn.style.color = v === 'list' ? 'var(--accent-cyan)' : 'var(--text-muted)'; }
+  if (cardBtn) { cardBtn.style.borderColor = v === 'card' ? 'var(--accent-cyan)' : 'var(--border-panel)'; cardBtn.style.color = v === 'card' ? 'var(--accent-cyan)' : 'var(--text-muted)'; }
+}
+
+function saveArrangement() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  let rows = data.filter(d =>
+    (d.model||'').toLowerCase().includes(q) ||
+    (d.brand||'').toLowerCase().includes(q) ||
+    (d.scale||'').toLowerCase().includes(q)
+  );
+  rows.sort((a, b) => {
+    let va = a[sortKey] ?? '', vb = b[sortKey] ?? '';
+    if (['price','units','no'].includes(sortKey)) { va = +va; vb = +vb; }
+    if (va < vb) return -sortDir;
+    if (va > vb) return sortDir;
+    return 0;
+  });
+  const idToNo = {};
+  rows.forEach((d, i) => { idToNo[d.id] = i + 1; });
+  data = data.map(d => ({ ...d, no: idToNo[d.id] ?? d.no }));
+  save();
+  renderTable();
+  showToast('ARRANGEMENT SAVED');
+}
+
 function renderQmsv() {
   const q = (document.getElementById('qmsvSearch')?.value || '').toLowerCase();
   const filter = document.getElementById('qmsvFilter')?.value || 'all';
@@ -2176,31 +2315,53 @@ function renderQmsv() {
   document.getElementById('qmsvTotal').textContent = total;
   document.getElementById('qmsvOwned').textContent = owned;
   document.getElementById('qmsvMissing').textContent = total - owned;
-  document.getElementById('qmsvListCount').textContent = `${rows.length} / ${total} FIGURES`;
 
-  const body = document.getElementById('qmsvListBody');
-  if (rows.length === 0) {
-    body.innerHTML = `<div class="qmsv-empty"><div class="empty-icon">◈</div><div class="empty-text" style="font-family:'Share Tech Mono',monospace;color:var(--text-muted);font-size:12px;letter-spacing:2px;">NO FIGURES FOUND</div></div>`;
-    return;
-  }
-  body.innerHTML = rows.map(d => `
-    <div class="qmsv-row ${d.owned ? 'owned' : 'missing'}">
-      <div class="qmsv-check" onclick="toggleQmsvOwned('${d.id}')" title="${d.owned ? 'Mark as not owned' : 'Mark as owned'}">✓</div>
-      ${d.image
-        ? `<img class="qmsv-thumb-small" src="${d.image}" onclick="openQmsvImageViewer('${d.id}')" title="View image">`
-        : `<div class="qmsv-thumb-empty">◈</div>`}
-      <div class="qmsv-row-info">
-        <div class="qmsv-row-name">${escHtml(d.series||'—')}</div>
-        <div class="qmsv-row-meta">
-          ${d.variant ? `<span class="qmsv-row-variant">${escHtml(d.variant)}</span>` : ''}
+  setQmsvView(qmsvView);
+
+  const content = document.getElementById('qmsvContent');
+  if (!content) return;
+
+  const emptyHtml = `<div class="qmsv-empty"><div class="empty-icon">◈</div><div class="empty-text" style="font-family:'Share Tech Mono',monospace;color:var(--text-muted);font-size:12px;letter-spacing:2px;">NO FIGURES FOUND</div></div>`;
+
+  if (qmsvView === 'card') {
+    if (rows.length === 0) { content.innerHTML = emptyHtml; return; }
+    content.innerHTML = `<div class="qmsv-card-grid">${rows.map(d => `
+      <div class="qmsv-card ${d.owned ? 'owned' : 'missing'}">
+        ${d.owned
+          ? `<div class="qmsv-card-owned-badge" onclick="toggleQmsvOwned('${d.id}')" title="Unmark">✓</div>`
+          : `<div class="qmsv-card-no-badge" onclick="toggleQmsvOwned('${d.id}')" title="Mark as owned"></div>`}
+        ${d.image ? `<img class="qmsv-card-img" src="${d.image}" onclick="openQmsvImageViewer('${d.id}')">` : `<div class="qmsv-card-no-img">◈</div>`}
+        <div class="qmsv-card-body">
+          <div class="qmsv-card-series">${escHtml(d.series||'—')}</div>
+          ${d.variant ? `<div class="qmsv-card-variant">${escHtml(d.variant)}</div>` : ''}
         </div>
+        <div class="qmsv-card-actions">
+          <button class="btn btn-primary btn-sm btn-icon" onclick="openQmsvEditModal('${d.id}')" title="Edit">✎</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteQmsvEntry('${d.id}')" title="Delete">✕</button>
+        </div>
+      </div>`).join('')}</div>`;
+  } else {
+    content.innerHTML = `<div class="qmsv-list">
+      <div class="qmsv-list-header">
+        <div class="table-title">// QMSV FIGURE LOG</div>
+        <div class="table-count">${rows.length} / ${total} FIGURES</div>
       </div>
-      <div class="qmsv-row-actions">
-        <button class="btn btn-primary btn-sm btn-icon" onclick="openQmsvEditModal('${d.id}')" title="Edit">✎</button>
-        <button class="btn btn-danger btn-sm btn-icon" onclick="deleteQmsvEntry('${d.id}')" title="Delete">✕</button>
+      <div>${rows.length === 0 ? emptyHtml : rows.map(d => `
+        <div class="qmsv-row ${d.owned ? 'owned' : 'missing'}">
+          <div class="qmsv-check" onclick="toggleQmsvOwned('${d.id}')" title="${d.owned ? 'Unmark' : 'Mark as owned'}">✓</div>
+          ${d.image ? `<img class="qmsv-thumb-small" src="${d.image}" onclick="openQmsvImageViewer('${d.id}')" title="View image">` : `<div class="qmsv-thumb-empty">◈</div>`}
+          <div class="qmsv-row-info">
+            <div class="qmsv-row-name">${escHtml(d.series||'—')}</div>
+            <div class="qmsv-row-meta">${d.variant ? `<span class="qmsv-row-variant">${escHtml(d.variant)}</span>` : ''}</div>
+          </div>
+          <div class="qmsv-row-actions">
+            <button class="btn btn-primary btn-sm btn-icon" onclick="openQmsvEditModal('${d.id}')" title="Edit">✎</button>
+            <button class="btn btn-danger btn-sm btn-icon" onclick="deleteQmsvEntry('${d.id}')" title="Delete">✕</button>
+          </div>
+        </div>`).join('')}
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }
 }
 
 function populateQmsvSeriesList() {
