@@ -1491,24 +1491,16 @@ let sortKey = 'brand';
 let sortDir = 1;
 
 const STORAGE_KEY = 'gunpla_backlog_v1';
-const QMSV_STORAGE_KEY = 'qmsv_collection_v1';
 
 function load() {
-  try { data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { data = []; }
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    data = raw ? JSON.parse(raw) : [];
+  } catch { data = []; }
 }
 
 function save() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
-  catch (e) { showToast('SAVE FAILED — ' + e.message, true); }
-}
-
-function loadQmsv() {
-  try { qmsvData = JSON.parse(localStorage.getItem(QMSV_STORAGE_KEY) || '[]'); } catch { qmsvData = []; }
-}
-
-function saveQmsv() {
-  try { localStorage.setItem(QMSV_STORAGE_KEY, JSON.stringify(qmsvData)); }
-  catch (e) { showToast('SAVE FAILED — ' + e.message, true); }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
 function genId() {
@@ -2136,6 +2128,17 @@ let qmsvEditId = null;
 let qmsvCurrentImage = null;
 const QMSV_STORAGE_KEY = 'qmsv_collection_v1';
 
+function loadQmsv() {
+  try {
+    const raw = localStorage.getItem(QMSV_STORAGE_KEY);
+    qmsvData = raw ? JSON.parse(raw) : [];
+  } catch { qmsvData = []; }
+}
+
+function saveQmsv() {
+  localStorage.setItem(QMSV_STORAGE_KEY, JSON.stringify(qmsvData));
+}
+
 function renderQmsv() {
   const q = (document.getElementById('qmsvSearch')?.value || '').toLowerCase();
   const filter = document.getElementById('qmsvFilter')?.value || 'all';
@@ -2344,7 +2347,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Init
 load();
 data = data.map((d, i) => ({ no: i + 1, ...d }));
 loadQmsv();
