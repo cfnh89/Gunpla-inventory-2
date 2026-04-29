@@ -936,8 +936,8 @@
   .qmsv-row {
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding: 12px 18px;
+    gap: 16px;
+    padding: 16px 20px;
     border-bottom: 1px solid var(--hud-line);
     transition: background 0.1s;
   }
@@ -949,8 +949,8 @@
   .qmsv-row.missing { opacity: 0.55; }
 
   .qmsv-check {
-    width: 22px;
-    height: 22px;
+    width: 28px;
+    height: 28px;
     border-radius: 2px;
     border: 2px solid var(--border-panel);
     display: flex;
@@ -959,7 +959,7 @@
     cursor: pointer;
     flex-shrink: 0;
     transition: all 0.15s;
-    font-size: 13px;
+    font-size: 16px;
     color: transparent;
     background: var(--bg-card);
   }
@@ -973,8 +973,8 @@
   .qmsv-check:hover { border-color: var(--accent-green); }
 
   .qmsv-thumb-small {
-    width: 36px;
-    height: 36px;
+    width: 72px;
+    height: 72px;
     object-fit: cover;
     border-radius: 2px;
     border: 1px solid var(--border-panel);
@@ -986,8 +986,8 @@
   .qmsv-thumb-small:hover { border-color: var(--accent-cyan); }
 
   .qmsv-thumb-empty {
-    width: 36px;
-    height: 36px;
+    width: 72px;
+    height: 72px;
     border: 1px dashed var(--border-panel);
     border-radius: 2px;
     flex-shrink: 0;
@@ -995,7 +995,7 @@
     align-items: center;
     justify-content: center;
     color: var(--text-muted);
-    font-size: 12px;
+    font-size: 20px;
     opacity: 0.35;
   }
 
@@ -1006,7 +1006,7 @@
 
   .qmsv-row-name {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 15px;
+    font-size: 20px;
     font-weight: 700;
     color: var(--text-primary);
     line-height: 1.2;
@@ -1016,20 +1016,20 @@
     display: flex;
     gap: 10px;
     align-items: center;
-    margin-top: 2px;
+    margin-top: 4px;
     flex-wrap: wrap;
   }
 
   .qmsv-row-series {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
+    font-size: 12px;
     color: var(--text-muted);
     letter-spacing: 1px;
   }
 
   .qmsv-row-variant {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
+    font-size: 12px;
     color: var(--accent-amber);
     letter-spacing: 1px;
   }
@@ -1330,18 +1330,7 @@
         <div class="form-group form-full">
           <label class="form-label">Series</label>
           <input class="form-input" type="text" id="qfSeries" list="qmsvSeriesList" placeholder="e.g. Mobile Suit Gundam">
-          <datalist id="qmsvSeriesList">
-            <option value="Mobile Suit Gundam">
-            <option value="Zeta Gundam">
-            <option value="Gundam ZZ">
-            <option value="Char's Counterattack">
-            <option value="Gundam Wing">
-            <option value="Gundam SEED">
-            <option value="Gundam 00">
-            <option value="Iron-Blooded Orphans">
-            <option value="Witch from Mercury">
-            <option value="Build Fighters">
-          </datalist>
+          <datalist id="qmsvSeriesList"></datalist>
         </div>
         <div class="form-group form-full">
           <label class="form-label">Variant</label>
@@ -2190,12 +2179,19 @@ function renderQmsv() {
   `).join('');
 }
 
+function populateQmsvSeriesList() {
+  const existing = [...new Set(qmsvData.map(d => d.series).filter(Boolean))].sort();
+  const datalist = document.getElementById('qmsvSeriesList');
+  datalist.innerHTML = existing.map(s => `<option value="${escHtml(s)}">`).join('');
+}
+
 function openQmsvAddModal() {
   qmsvEditId = null;
   document.getElementById('qmsvModalTitle').textContent = 'ADD FIGURE';
   document.getElementById('qfSeries').value = '';
   document.getElementById('qfVariant').value = '';
   document.getElementById('qfOwned').checked = false;
+  populateQmsvSeriesList();
   resetQmsvImageUI(null);
   document.getElementById('qmsvModal').classList.add('open');
 }
@@ -2208,6 +2204,7 @@ function openQmsvEditModal(id) {
   document.getElementById('qfSeries').value = entry.series || '';
   document.getElementById('qfVariant').value = entry.variant || '';
   document.getElementById('qfOwned').checked = !!entry.owned;
+  populateQmsvSeriesList();
   resetQmsvImageUI(entry.image || null);
   document.getElementById('qmsvModal').classList.add('open');
 }
