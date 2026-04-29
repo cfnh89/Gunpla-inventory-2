@@ -1499,8 +1499,29 @@ function load() {
   } catch { data = []; }
 }
 
+// Show a banner if any entry is missing images (images not in localStorage)
+function checkImagesBanner() {
+  const hasImglessEntries = data.some(d => !d.image) || qmsvData.some(d => !d.image);
+  const gistId = localStorage.getItem('gist_id');
+  const token = localStorage.getItem('github_token');
+  let banner = document.getElementById('imagesBanner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'imagesBanner';
+    banner.style.cssText = `font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:1px;background:#fff8e6;border:1px solid var(--accent-amber);border-radius:2px;padding:10px 16px;margin-bottom:16px;color:var(--accent-amber);display:flex;align-items:center;justify-content:space-between;gap:12px;`;
+    banner.innerHTML = `<span>⚠ IMAGES ARE NOT STORED LOCALLY — PULL FROM GIST TO LOAD IMAGES</span><button onclick="openSyncModal();document.getElementById('imagesBanner').style.display='none'" style="font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;background:none;border:1px solid var(--accent-amber);color:var(--accent-amber);padding:4px 10px;cursor:pointer;border-radius:2px;">SYNC NOW</button>`;
+    const nav = document.querySelector('.page-nav');
+    nav.parentNode.insertBefore(banner, nav.nextSibling);
+  }
+  banner.style.display = (gistId && token) ? 'flex' : 'none';
+}
+
 function save() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  // Strip images before saving to localStorage to avoid quota errors
+  const slim = data.map(d => { const {image, ...rest} = d; return rest; });
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(slim)); } catch(e) {
+    console.warn('localStorage full, skipping save:', e);
+  }
 }
 
 function genId() {
@@ -2051,6 +2072,11 @@ async function gistPull() {
 
     renderTable();
     renderQmsv();
+    // Clear any old full-size image data from localStorage now that we use Gist
+    save();
+    saveQmsv();
+    const b = document.getElementById('imagesBanner');
+    if (b) b.style.display = 'none';
     closeSyncModal();
     showToast(`PULLED — ${data.length} BACKLOG + ${qmsvData.length} QMSV`);
   } catch (err) { showToast(`PULL FAILED — ${err.message}`, true); }
@@ -2136,7 +2162,11 @@ function loadQmsv() {
 }
 
 function saveQmsv() {
-  localStorage.setItem(QMSV_STORAGE_KEY, JSON.stringify(qmsvData));
+  // Strip images before saving to localStorage to avoid quota errors
+  const slim = qmsvData.map(d => { const {image, ...rest} = d; return rest; });
+  try { localStorage.setItem(QMSV_STORAGE_KEY, JSON.stringify(slim)); } catch(e) {
+    console.warn('localStorage full, skipping save:', e);
+  }
 }
 
 function renderQmsv() {
@@ -2352,6 +2382,7 @@ data = data.map((d, i) => ({ no: i + 1, ...d }));
 loadQmsv();
 updateGithubStatus();
 renderTable();
+checkImagesBanner();
 </script>
 </body>
 </html>
