@@ -2020,13 +2020,13 @@ function updateSyncModalStatus() {
   gistDisplay.textContent = gistId ? `Gist ID: ${gistId}` : '';
 }
 
-async function gistPull() {
+async function gistPull(silent = false) {
   const token = localStorage.getItem('github_token');
   const gistId = localStorage.getItem('gist_id');
   const workerUrl = localStorage.getItem('worker_url');
-  if (!token) { showToast('SET GITHUB TOKEN IN SETTINGS', true); openSettingsModal(); return; }
-  if (!gistId) { showToast('NO GIST FOUND — ENTER GIST ID IN SETTINGS', true); openSettingsModal(); return; }
-  showToast('PULLING FROM GIST...');
+  if (!token) { if (!silent) { showToast('SET GITHUB TOKEN IN SETTINGS', true); openSettingsModal(); } return; }
+  if (!gistId) { if (!silent) { showToast('NO GIST FOUND — ENTER GIST ID IN SETTINGS', true); openSettingsModal(); } return; }
+  if (!silent) showToast('PULLING FROM GIST...');
   try {
     const metaRes = await fetch(`https://api.github.com/gists/${gistId}`, {
       headers: {
@@ -2035,13 +2035,13 @@ async function gistPull() {
         'X-GitHub-Api-Version': '2022-11-28'
       }
     });
-    if (metaRes.status === 401) { showToast('INVALID TOKEN — CHECK SETTINGS', true); return; }
-    if (metaRes.status === 404) { showToast('GIST NOT FOUND — CHECK GIST ID', true); return; }
-    if (!metaRes.ok) { showToast(`PULL FAILED — HTTP ${metaRes.status}`, true); return; }
+    if (metaRes.status === 401) { if (!silent) showToast('INVALID TOKEN — CHECK SETTINGS', true); return; }
+    if (metaRes.status === 404) { if (!silent) showToast('GIST NOT FOUND — CHECK GIST ID', true); return; }
+    if (!metaRes.ok) { if (!silent) showToast(`PULL FAILED — HTTP ${metaRes.status}`, true); return; }
 
     const meta = await metaRes.json();
     const rawUrl = meta.files?.[GIST_FILENAME]?.raw_url;
-    if (!rawUrl) { showToast('FILE NOT FOUND IN GIST', true); return; }
+    if (!rawUrl) { if (!silent) showToast('FILE NOT FOUND IN GIST', true); return; }
 
     let text;
     if (workerUrl) {
@@ -2049,37 +2049,31 @@ async function gistPull() {
         `${workerUrl.replace(/\/$/, '')}?mode=gist&url=${encodeURIComponent(rawUrl)}`,
         { headers: { 'Authorization': `Bearer ${token}` } }
       );
-      if (!proxyRes.ok) { showToast(`PROXY FETCH FAILED — HTTP ${proxyRes.status}`, true); return; }
+      if (!proxyRes.ok) { if (!silent) showToast(`PROXY FETCH FAILED — HTTP ${proxyRes.status}`, true); return; }
       text = await proxyRes.text();
     } else {
       const rawRes = await fetch(rawUrl, { headers: { 'Authorization': `Bearer ${token}` } });
-      if (!rawRes.ok) { showToast(`RAW FETCH FAILED — HTTP ${rawRes.status}`, true); return; }
+      if (!rawRes.ok) { if (!silent) showToast(`RAW FETCH FAILED — HTTP ${rawRes.status}`, true); return; }
       text = await rawRes.text();
     }
 
     const pulled = JSON.parse(text);
-
-    // Support both old format (plain array) and new format ({backlog, qmsv})
     if (Array.isArray(pulled)) {
-      data = pulled;
-      save();
+      data = pulled; save();
     } else if (pulled && typeof pulled === 'object') {
       if (Array.isArray(pulled.backlog)) { data = pulled.backlog; save(); }
       if (Array.isArray(pulled.qmsv)) { qmsvData = pulled.qmsv; saveQmsv(); }
-    } else {
-      showToast('INVALID DATA FORMAT', true); return;
-    }
+    } else { if (!silent) showToast('INVALID DATA FORMAT', true); return; }
 
     renderTable();
     renderQmsv();
-    // Clear any old full-size image data from localStorage now that we use Gist
     save();
     saveQmsv();
     const b = document.getElementById('imagesBanner');
     if (b) b.style.display = 'none';
-    closeSyncModal();
+    if (!silent) closeSyncModal();
     showToast(`PULLED — ${data.length} BACKLOG + ${qmsvData.length} QMSV`);
-  } catch (err) { showToast(`PULL FAILED — ${err.message}`, true); }
+  } catch (err) { if (!silent) showToast(`PULL FAILED — ${err.message}`, true); }
 }
 
 async function gistPush() {
@@ -2383,6 +2377,16 @@ loadQmsv();
 updateGithubStatus();
 renderTable();
 checkImagesBanner();
+
+// Auto-pull from Gist on page load if credentials are present
+(async () => {
+  const token = localStorage.getItem('github_token');
+  const gistId = localStorage.getItem('gist_id');
+  if (token && gistId) {
+    showToast('AUTO-SYNCING FROM GIST...');
+    await gistPull(true); // silent mode — won't close modal or show redundant toast
+  }
+})();
 </script>
 </body>
 </html>
