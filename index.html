@@ -1988,7 +1988,7 @@ document.addEventListener('paste', e => {
 });
 
 // GIST SYNC
-const GIST_FILENAME = 'gunpla-backlog.json';
+const GIST_FILENAME = 'gunpla-inventory.json';
 
 function openSyncModal() {
   updateSyncModalStatus();
@@ -2018,7 +2018,6 @@ async function gistPull() {
   if (!gistId) { showToast('NO GIST FOUND — ENTER GIST ID IN SETTINGS', true); openSettingsModal(); return; }
   showToast('PULLING FROM GIST...');
   try {
-    // Step 1: get gist metadata (this endpoint supports CORS fine)
     const metaRes = await fetch(`https://api.github.com/gists/${gistId}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -2034,7 +2033,6 @@ async function gistPull() {
     const rawUrl = meta.files?.[GIST_FILENAME]?.raw_url;
     if (!rawUrl) { showToast('FILE NOT FOUND IN GIST', true); return; }
 
-    // Step 2: fetch raw content via worker to avoid CORS on raw.githubusercontent.com
     let text;
     if (workerUrl) {
       const proxyRes = await fetch(
@@ -2044,19 +2042,28 @@ async function gistPull() {
       if (!proxyRes.ok) { showToast(`PROXY FETCH FAILED — HTTP ${proxyRes.status}`, true); return; }
       text = await proxyRes.text();
     } else {
-      // Fallback: try direct (may work on some browsers/configs)
       const rawRes = await fetch(rawUrl, { headers: { 'Authorization': `Bearer ${token}` } });
       if (!rawRes.ok) { showToast(`RAW FETCH FAILED — HTTP ${rawRes.status}`, true); return; }
       text = await rawRes.text();
     }
 
     const pulled = JSON.parse(text);
-    if (!Array.isArray(pulled)) { showToast('INVALID DATA FORMAT', true); return; }
-    data = pulled;
-    save();
+
+    // Support both old format (plain array) and new format ({backlog, qmsv})
+    if (Array.isArray(pulled)) {
+      data = pulled;
+      save();
+    } else if (pulled && typeof pulled === 'object') {
+      if (Array.isArray(pulled.backlog)) { data = pulled.backlog; save(); }
+      if (Array.isArray(pulled.qmsv)) { qmsvData = pulled.qmsv; saveQmsv(); }
+    } else {
+      showToast('INVALID DATA FORMAT', true); return;
+    }
+
     renderTable();
+    renderQmsv();
     closeSyncModal();
-    showToast(`PULLED — ${data.length} ENTRIES LOADED`);
+    showToast(`PULLED — ${data.length} BACKLOG + ${qmsvData.length} QMSV`);
   } catch (err) { showToast(`PULL FAILED — ${err.message}`, true); }
 }
 
@@ -2065,7 +2072,7 @@ async function gistPush() {
   if (!token) { showToast('SET GITHUB TOKEN IN SETTINGS', true); openSettingsModal(); return; }
   showToast('PUSHING TO GIST...');
   const gistId = localStorage.getItem('gist_id');
-  const content = JSON.stringify(data, null, 2);
+  const content = JSON.stringify({ backlog: data, qmsv: qmsvData }, null, 2);
   const headers = {
     'Authorization': `Bearer ${token}`,
     'Accept': 'application/vnd.github+json',
@@ -2083,7 +2090,7 @@ async function gistPush() {
       res = await fetch('https://api.github.com/gists', {
         method: 'POST', headers,
         body: JSON.stringify({
-          description: 'Model Kit Inventory — Gunpla Backlog Tracker',
+          description: 'Model Kit Inventory — Gunpla Tracker',
           public: false,
           files: { [GIST_FILENAME]: { content } }
         })
@@ -2093,12 +2100,11 @@ async function gistPush() {
     if (!res.ok) { showToast(`PUSH FAILED — HTTP ${res.status}`, true); return; }
     const json = await res.json();
     localStorage.setItem('gist_id', json.id);
-    // Also update the gist ID field if settings is open
     const gistInput = document.getElementById('gistIdInput');
     if (gistInput) gistInput.value = json.id;
     updateSyncModalStatus();
     updateGithubStatus();
-    showToast(`PUSHED — ${data.length} ENTRIES SAVED`);
+    showToast(`PUSHED — ${data.length} BACKLOG + ${qmsvData.length} QMSV`);
   } catch (err) { showToast(`PUSH FAILED — ${err.message}`, true); }
 }
 
