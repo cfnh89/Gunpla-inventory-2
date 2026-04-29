@@ -1491,85 +1491,24 @@ let sortKey = 'brand';
 let sortDir = 1;
 
 const STORAGE_KEY = 'gunpla_backlog_v1';
+const QMSV_STORAGE_KEY = 'qmsv_collection_v1';
 
-// ── IndexedDB setup ──────────────────────────────────────────────────────────
-const DB_NAME = 'GunplaInventoryDB';
-const DB_VERSION = 1;
-let db = null;
-
-function openDB() {
-  return new Promise((resolve, reject) => {
-    if (db) { resolve(db); return; }
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = e => {
-      const d = e.target.result;
-      if (!d.objectStoreNames.contains('backlog')) d.createObjectStore('backlog', { keyPath: 'id' });
-      if (!d.objectStoreNames.contains('qmsv'))    d.createObjectStore('qmsv',    { keyPath: 'id' });
-    };
-    req.onsuccess = e => { db = e.target.result; resolve(db); };
-    req.onerror   = e => reject(e.target.error);
-  });
+function load() {
+  try { data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { data = []; }
 }
 
-function idbGetAll(store) {
-  return openDB().then(d => new Promise((resolve, reject) => {
-    const tx = d.transaction(store, 'readonly');
-    const req = tx.objectStore(store).getAll();
-    req.onsuccess = () => resolve(req.result);
-    req.onerror   = e => reject(e.target.error);
-  }));
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+  catch (e) { showToast('SAVE FAILED — ' + e.message, true); }
 }
 
-function idbPutAll(store, items) {
-  return openDB().then(d => new Promise((resolve, reject) => {
-    const tx = d.transaction(store, 'readwrite');
-    const os = tx.objectStore(store);
-    os.clear();
-    items.forEach(item => os.put(item));
-    tx.oncomplete = resolve;
-    tx.onerror    = e => reject(e.target.error);
-  }));
+function loadQmsv() {
+  try { qmsvData = JSON.parse(localStorage.getItem(QMSV_STORAGE_KEY) || '[]'); } catch { qmsvData = []; }
 }
 
-// ── Backlog load/save ────────────────────────────────────────────────────────
-async function load() {
-  try {
-    // Migrate from localStorage if present
-    const legacy = localStorage.getItem(STORAGE_KEY);
-    if (legacy) {
-      data = JSON.parse(legacy);
-      await idbPutAll('backlog', data);
-      localStorage.removeItem(STORAGE_KEY);
-    } else {
-      data = await idbGetAll('backlog');
-    }
-  } catch { data = []; }
-}
-
-async function save() {
-  try {
-    await idbPutAll('backlog', data);
-  } catch (e) { showToast('SAVE FAILED — ' + e.message, true); }
-}
-
-// ── QMSV load/save ───────────────────────────────────────────────────────────
-async function loadQmsv() {
-  try {
-    const legacy = localStorage.getItem('qmsv_collection_v1');
-    if (legacy) {
-      qmsvData = JSON.parse(legacy);
-      await idbPutAll('qmsv', qmsvData);
-      localStorage.removeItem('qmsv_collection_v1');
-    } else {
-      qmsvData = await idbGetAll('qmsv');
-    }
-  } catch { qmsvData = []; }
-}
-
-async function saveQmsv() {
-  try {
-    await idbPutAll('qmsv', qmsvData);
-  } catch (e) { showToast('SAVE FAILED — ' + e.message, true); }
+function saveQmsv() {
+  try { localStorage.setItem(QMSV_STORAGE_KEY, JSON.stringify(qmsvData)); }
+  catch (e) { showToast('SAVE FAILED — ' + e.message, true); }
 }
 
 function genId() {
@@ -1690,7 +1629,7 @@ function closeModal() {
   document.getElementById('entryModal').classList.remove('open');
 }
 
-async function saveEntry() {
+function saveEntry() {
   const model = document.getElementById('fModel').value.trim();
   if (!model) { showToast('MODEL DESIGNATION REQUIRED', true); return; }
 
@@ -1712,15 +1651,15 @@ async function saveEntry() {
     showToast('UNIT ADDED TO BACKLOG');
   }
 
-  await save();
+  save();
   renderTable();
   closeModal();
 }
 
-async function deleteEntry(id) {
+function deleteEntry(id) {
   if (!confirm('CONFIRM DELETE: This unit will be removed from the backlog.')) return;
   data = data.filter(d => d.id !== id);
-  await save();
+  save();
   renderTable();
   showToast('UNIT REMOVED');
 }
@@ -1774,7 +1713,7 @@ function importExcel(evt) {
         });
         added++;
       }
-      await save();
+      save();
       renderTable();
       showToast(`IMPORTED ${added} UNITS`);
     } catch (err) {
@@ -2110,10 +2049,10 @@ async function gistPull() {
     // Support both old format (plain array) and new format ({backlog, qmsv})
     if (Array.isArray(pulled)) {
       data = pulled;
-      await save();
+      save();
     } else if (pulled && typeof pulled === 'object') {
-      if (Array.isArray(pulled.backlog)) { data = pulled.backlog; await save(); }
-      if (Array.isArray(pulled.qmsv)) { qmsvData = pulled.qmsv; await saveQmsv(); }
+      if (Array.isArray(pulled.backlog)) { data = pulled.backlog; save(); }
+      if (Array.isArray(pulled.qmsv)) { qmsvData = pulled.qmsv; saveQmsv(); }
     } else {
       showToast('INVALID DATA FORMAT', true); return;
     }
@@ -2269,7 +2208,7 @@ function openQmsvEditModal(id) {
 
 function closeQmsvModal() { document.getElementById('qmsvModal').classList.remove('open'); }
 
-async function saveQmsvEntry() {
+function saveQmsvEntry() {
   const series = document.getElementById('qfSeries').value.trim();
   if (!series) { showToast('SERIES IS REQUIRED', true); return; }
   const entry = {
@@ -2286,21 +2225,21 @@ async function saveQmsvEntry() {
     qmsvData.push({ id: genId(), ...entry });
     showToast('FIGURE ADDED');
   }
-  await saveQmsv(); renderQmsv(); closeQmsvModal();
+  saveQmsv(); renderQmsv(); closeQmsvModal();
 }
 
-async function toggleQmsvOwned(id) {
+function toggleQmsvOwned(id) {
   const entry = qmsvData.find(d => d.id === id);
   if (!entry) return;
   entry.owned = !entry.owned;
-  await saveQmsv(); renderQmsv();
+  saveQmsv(); renderQmsv();
   showToast(entry.owned ? 'MARKED AS OWNED' : 'MARKED AS NOT OWNED');
 }
 
-async function deleteQmsvEntry(id) {
+function deleteQmsvEntry(id) {
   if (!confirm('Delete this figure?')) return;
   qmsvData = qmsvData.filter(d => d.id !== id);
-  await saveQmsv(); renderQmsv();
+  saveQmsv(); renderQmsv();
   showToast('FIGURE REMOVED');
 }
 
@@ -2406,13 +2345,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Init
-(async () => {
-  await load();
-  data = data.map((d, i) => ({ no: i + 1, ...d }));
-  await loadQmsv();
-  updateGithubStatus();
-  renderTable();
-})();
+load();
+data = data.map((d, i) => ({ no: i + 1, ...d }));
+loadQmsv();
+updateGithubStatus();
+renderTable();
 </script>
 </body>
 </html>
