@@ -2239,7 +2239,6 @@ document.getElementById('syncModal').addEventListener('click', function(e) {
   if (e.target === this) closeSyncModal();
 });
 
-// PAGE SWITCHING
 function switchPage(page) {
   document.getElementById('pagBacklog').style.display = page === 'backlog' ? '' : 'none';
   document.getElementById('pagQmsv').style.display = page === 'qmsv' ? '' : 'none';
@@ -2278,6 +2277,7 @@ function setQmsvView(v) {
   const cardBtn = document.getElementById('qmsvViewCard');
   if (listBtn) { listBtn.style.borderColor = v === 'list' ? 'var(--accent-cyan)' : 'var(--border-panel)'; listBtn.style.color = v === 'list' ? 'var(--accent-cyan)' : 'var(--text-muted)'; }
   if (cardBtn) { cardBtn.style.borderColor = v === 'card' ? 'var(--accent-cyan)' : 'var(--border-panel)'; cardBtn.style.color = v === 'card' ? 'var(--accent-cyan)' : 'var(--text-muted)'; }
+  renderQmsv();
 }
 
 function saveArrangement() {
@@ -2316,7 +2316,11 @@ function renderQmsv() {
   document.getElementById('qmsvOwned').textContent = owned;
   document.getElementById('qmsvMissing').textContent = total - owned;
 
-  setQmsvView(qmsvView);
+  // Update toggle button styles without recursion
+  const listBtn = document.getElementById('qmsvViewList');
+  const cardBtn = document.getElementById('qmsvViewCard');
+  if (listBtn) { listBtn.style.borderColor = qmsvView === 'list' ? 'var(--accent-cyan)' : 'var(--border-panel)'; listBtn.style.color = qmsvView === 'list' ? 'var(--accent-cyan)' : 'var(--text-muted)'; }
+  if (cardBtn) { cardBtn.style.borderColor = qmsvView === 'card' ? 'var(--accent-cyan)' : 'var(--border-panel)'; cardBtn.style.color = qmsvView === 'card' ? 'var(--accent-cyan)' : 'var(--text-muted)'; }
 
   const content = document.getElementById('qmsvContent');
   if (!content) return;
