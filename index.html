@@ -1045,6 +1045,108 @@
     padding: 60px 20px;
   }
 
+  /* BACKLOG CARD VIEW */
+  .backlog-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .backlog-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-panel);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+    transition: transform 0.15s, border-color 0.15s;
+  }
+
+  .backlog-card:hover { transform: translateY(-2px); border-color: var(--accent-cyan); }
+
+  .backlog-card-img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    display: block;
+    background: var(--bg-card);
+    cursor: pointer;
+  }
+
+  .backlog-card-no-img {
+    width: 100%;
+    aspect-ratio: 1;
+    background: var(--bg-card);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 36px;
+    opacity: 0.25;
+  }
+
+  .backlog-card-no {
+    position: absolute;
+    top: 7px; left: 7px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    background: rgba(255,255,255,0.85);
+    color: var(--text-muted);
+    padding: 2px 6px;
+    border-radius: 1px;
+    letter-spacing: 1px;
+  }
+
+  .backlog-card-body {
+    padding: 10px 12px 6px;
+  }
+
+  .backlog-card-brand {
+    margin-bottom: 4px;
+  }
+
+  .backlog-card-model {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.3;
+    margin-bottom: 6px;
+  }
+
+  .backlog-card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+
+  .backlog-card-scale {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+  }
+
+  .backlog-card-price {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent-amber);
+  }
+
+  .backlog-card-units {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--text-secondary);
+  }
+
+  .backlog-card-actions {
+    display: flex;
+    gap: 4px;
+    padding: 0 8px 8px;
+  }
+
   /* QMSV CARD VIEW */
   .qmsv-card-grid {
     display: grid;
@@ -1199,6 +1301,16 @@
     </div>
     <div class="toolbar-divider"></div>
     <div class="toolbar-group">
+      <label class="sort-label">VIEW</label>
+      <button class="btn btn-sm" id="backlogViewTable" onclick="setBacklogView('table')" style="border-color:var(--accent-cyan);color:var(--accent-cyan);">
+        ☰ TABLE
+      </button>
+      <button class="btn btn-sm" id="backlogViewCard" onclick="setBacklogView('card')" style="border-color:var(--border-panel);color:var(--text-muted);">
+        ⊞ CARDS
+      </button>
+    </div>
+    <div class="toolbar-divider"></div>
+    <div class="toolbar-group">
       <button class="btn btn-amber" onclick="downloadTemplate()">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v7M3 6l3 3 3-3M1 10h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/></svg>
         XLS TEMPLATE
@@ -1208,13 +1320,6 @@
         IMPORT XLS
         <input type="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="importExcel(event)">
       </label>
-    </div>
-    <div class="toolbar-divider"></div>
-    <div class="toolbar-group">
-      <button class="btn btn-primary" onclick="saveArrangement()" title="Save current sort order as the default arrangement" style="border-color:var(--accent-cyan);color:var(--accent-cyan);">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 1h7l3 3v7H1V1z" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/><path d="M3 1v3h5V1M3 11V7h6v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/></svg>
-        SAVE ORDER
-      </button>
     </div>
     <div class="toolbar-divider"></div>
     <div class="toolbar-group">
@@ -1239,34 +1344,8 @@
     </div>
   </div>
 
-  <!-- TABLE -->
-  <div class="table-panel" style="position:relative;">
-    <div class="corner-deco tl"></div>
-    <div class="corner-deco tr"></div>
-    <div class="corner-deco bl"></div>
-    <div class="corner-deco br"></div>
-    <div class="table-header">
-      <div class="table-title">// INVENTORY LOG</div>
-      <div class="table-count" id="tableCount">UNITS: 0</div>
-    </div>
-    <div class="table-wrap">
-      <table class="data-table" id="dataTable">
-        <thead>
-          <tr>
-            <th class="td-no">#</th>
-            <th style="width:56px"></th>
-            <th onclick="sortBy('brand')">BRAND</th>
-            <th onclick="sortBy('model')">MODEL DESIGNATION</th>
-            <th onclick="sortBy('scale')">SCALE</th>
-            <th onclick="sortBy('units')" style="text-align:center">UNITS</th>
-            <th onclick="sortBy('price')" style="text-align:right">PRICE (MYR)</th>
-            <th style="text-align:right">ACTIONS</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-    </div>
-  </div>
+  <!-- BACKLOG CONTENT (table or cards) -->
+  <div id="backlogContent"></div>
 
   <!-- TOTALS -->
   <div class="totals-bar" id="totalsBar">
@@ -1651,6 +1730,18 @@ function onSortSelect() {
   renderTable();
 }
 
+let backlogView = localStorage.getItem('backlog_view') || 'table';
+
+function setBacklogView(v) {
+  backlogView = v;
+  localStorage.setItem('backlog_view', v);
+  const tableBtn = document.getElementById('backlogViewTable');
+  const cardBtn = document.getElementById('backlogViewCard');
+  if (tableBtn) { tableBtn.style.borderColor = v === 'table' ? 'var(--accent-cyan)' : 'var(--border-panel)'; tableBtn.style.color = v === 'table' ? 'var(--accent-cyan)' : 'var(--text-muted)'; }
+  if (cardBtn) { cardBtn.style.borderColor = v === 'card' ? 'var(--accent-cyan)' : 'var(--border-panel)'; cardBtn.style.color = v === 'card' ? 'var(--accent-cyan)' : 'var(--text-muted)'; }
+  renderTable();
+}
+
 function renderTable() {
   const q = document.getElementById('searchInput').value.toLowerCase();
   let rows = data.filter(d =>
@@ -1669,43 +1760,87 @@ function renderTable() {
     return 0;
   });
 
-  const tbody = document.getElementById('tableBody');
-
-  if (rows.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">◈</div><div class="empty-text">NO UNITS IN BACKLOG // ADD UNIT TO BEGIN</div></div></td></tr>`;
-  } else {
-    tbody.innerHTML = rows.map((d, i) => `
-      <tr>
-        <td class="td-no">${String(i + 1).padStart(3, '0')}</td>
-        <td class="td-thumb">
-          ${d.image
-            ? `<img src="${d.image}" class="row-thumb" onclick="openImageViewer('${d.id}')" title="View image">`
-            : `<div class="row-thumb-empty">◈</div>`}
-        </td>
-        <td><span class="brand-pill ${getBrandClass(d.brand)}">${d.brand}</span></td>
-        <td class="td-model">${escHtml(d.model)}</td>
-        <td class="td-scale">${d.scale}</td>
-        <td class="td-units" style="text-align:center">${d.units}</td>
-        <td class="td-price">RM ${parseFloat(d.price || 0).toFixed(2)}</td>
-        <td class="td-actions">
-          <div class="td-actions-inner">
-            <button class="btn btn-primary btn-sm btn-icon" onclick="openEditModal('${d.id}')" title="Edit">✎</button>
-            <button class="btn btn-danger btn-sm btn-icon" onclick="deleteEntry('${d.id}')" title="Delete">✕</button>
-          </div>
-        </td>
-      </tr>
-    `).join('');
-  }
-
-  document.getElementById('tableCount').textContent = `UNITS: ${rows.length} / ${data.length}`;
+  // Update toggle button styles
+  const tableBtn = document.getElementById('backlogViewTable');
+  const cardBtn = document.getElementById('backlogViewCard');
+  if (tableBtn) { tableBtn.style.borderColor = backlogView === 'table' ? 'var(--accent-cyan)' : 'var(--border-panel)'; tableBtn.style.color = backlogView === 'table' ? 'var(--accent-cyan)' : 'var(--text-muted)'; }
+  if (cardBtn) { cardBtn.style.borderColor = backlogView === 'card' ? 'var(--accent-cyan)' : 'var(--border-panel)'; cardBtn.style.color = backlogView === 'card' ? 'var(--accent-cyan)' : 'var(--text-muted)'; }
 
   const totalKits = data.length;
   const totalUnits = data.reduce((s, d) => s + (parseInt(d.units) || 0), 0);
   const totalValue = data.reduce((s, d) => s + (parseFloat(d.price) || 0) * (parseInt(d.units) || 1), 0);
-
   document.getElementById('totalKits').textContent = totalKits;
   document.getElementById('totalUnits').textContent = totalUnits;
   document.getElementById('totalValue').textContent = 'RM ' + totalValue.toFixed(2);
+
+  const content = document.getElementById('backlogContent');
+  const emptyHtml = `<div class="empty-state"><div class="empty-icon">◈</div><div class="empty-text">NO UNITS IN BACKLOG // ADD UNIT TO BEGIN</div></div>`;
+
+  if (backlogView === 'card') {
+    if (rows.length === 0) { content.innerHTML = `<div style="margin-bottom:20px;">${emptyHtml}</div>`; return; }
+    content.innerHTML = `<div class="backlog-card-grid">${rows.map((d, i) => `
+      <div class="backlog-card">
+        <div class="backlog-card-no">${String(i + 1).padStart(3,'0')}</div>
+        ${d.image
+          ? `<img class="backlog-card-img" src="${d.image}" onclick="openImageViewer('${d.id}')">`
+          : `<div class="backlog-card-no-img">◈</div>`}
+        <div class="backlog-card-body">
+          <div class="backlog-card-brand"><span class="brand-pill ${getBrandClass(d.brand)}">${escHtml(d.brand)}</span></div>
+          <div class="backlog-card-model">${escHtml(d.model)}</div>
+          <div class="backlog-card-meta">
+            <span class="backlog-card-scale">${escHtml(d.scale)}</span>
+            <span class="backlog-card-price">RM ${parseFloat(d.price||0).toFixed(2)}</span>
+          </div>
+          <div class="backlog-card-units">QTY: ${d.units}</div>
+        </div>
+        <div class="backlog-card-actions">
+          <button class="btn btn-primary btn-sm btn-icon" onclick="openEditModal('${d.id}')" title="Edit">✎</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteEntry('${d.id}')" title="Delete">✕</button>
+        </div>
+      </div>`).join('')}</div>`;
+  } else {
+    content.innerHTML = `
+      <div class="table-panel" style="position:relative;margin-bottom:20px;">
+        <div class="corner-deco tl"></div><div class="corner-deco tr"></div>
+        <div class="corner-deco bl"></div><div class="corner-deco br"></div>
+        <div class="table-header">
+          <div class="table-title">// INVENTORY LOG</div>
+          <div class="table-count" id="tableCount">UNITS: ${rows.length} / ${data.length}</div>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="td-no">#</th>
+                <th style="width:80px"></th>
+                <th onclick="sortBy('brand')" style="cursor:pointer;">BRAND</th>
+                <th onclick="sortBy('model')" style="cursor:pointer;">MODEL DESIGNATION</th>
+                <th onclick="sortBy('scale')" style="cursor:pointer;">SCALE</th>
+                <th onclick="sortBy('units')" style="text-align:center;cursor:pointer;">UNITS</th>
+                <th onclick="sortBy('price')" style="text-align:right;cursor:pointer;">PRICE (MYR)</th>
+                <th style="text-align:right">ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody>${rows.length === 0 ? `<tr><td colspan="8">${emptyHtml}</td></tr>` :
+              rows.map((d, i) => `
+              <tr>
+                <td class="td-no">${String(i + 1).padStart(3,'0')}</td>
+                <td class="td-thumb">${d.image ? `<img src="${d.image}" class="row-thumb" onclick="openImageViewer('${d.id}')" title="View image">` : `<div class="row-thumb-empty">◈</div>`}</td>
+                <td><span class="brand-pill ${getBrandClass(d.brand)}">${escHtml(d.brand)}</span></td>
+                <td class="td-model">${escHtml(d.model)}</td>
+                <td class="td-scale">${escHtml(d.scale)}</td>
+                <td class="td-units" style="text-align:center">${d.units}</td>
+                <td class="td-price">RM ${parseFloat(d.price||0).toFixed(2)}</td>
+                <td class="td-actions"><div class="td-actions-inner">
+                  <button class="btn btn-primary btn-sm btn-icon" onclick="openEditModal('${d.id}')" title="Edit">✎</button>
+                  <button class="btn btn-danger btn-sm btn-icon" onclick="deleteEntry('${d.id}')" title="Delete">✕</button>
+                </div></td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  }
 }
 
 function escHtml(s) {
