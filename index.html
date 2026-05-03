@@ -1147,6 +1147,41 @@
     padding: 0 8px 8px;
   }
 
+  /* PREORDER STATUS */
+  .po-status-pending {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 1px;
+    border: 1px solid var(--accent-amber);
+    color: var(--accent-amber);
+    background: var(--accent-amber-dim);
+  }
+
+  .po-status-arrived {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 1px;
+    border: 1px solid var(--accent-green);
+    color: var(--accent-green);
+    background: var(--accent-green-dim);
+  }
+
+  .po-eta {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .po-seller {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
   /* QMSV CARD VIEW */
   .qmsv-card-grid {
     display: grid;
@@ -1286,6 +1321,9 @@
     <button class="page-tab" id="tabQmsv" onclick="switchPage('qmsv')">
       ◈ QMSV COLLECTION
     </button>
+    <button class="page-tab" id="tabPreorder" onclick="switchPage('preorder')">
+      ◈ PREORDERS
+    </button>
   </div>
 
   <!-- PAGE: BACKLOG -->
@@ -1423,7 +1461,129 @@
 
   </div> <!-- end pagQmsv -->
 
+  <!-- PAGE: PREORDERS -->
+  <div id="pagPreorder" style="display:none;">
+
+    <!-- PREORDER TOOLBAR -->
+    <div class="toolbar">
+      <div class="toolbar-group">
+        <button class="btn btn-primary" onclick="openPreorderAddModal()">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/></svg>
+          ADD PREORDER
+        </button>
+      </div>
+      <div class="toolbar-divider"></div>
+      <div class="toolbar-group">
+        <label class="sort-label">FILTER</label>
+        <select class="sort-select" id="preorderFilter" onchange="renderPreorders()">
+          <option value="all">All</option>
+          <option value="pending">Pending</option>
+          <option value="arrived">Arrived</option>
+        </select>
+      </div>
+      <div class="toolbar-divider"></div>
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input type="text" id="preorderSearch" placeholder="SEARCH MODEL / BRAND / SELLER..." oninput="renderPreorders()">
+      </div>
+    </div>
+
+    <!-- PREORDER STATS -->
+    <div class="totals-bar" style="margin-bottom:20px;">
+      <div class="stat-card cyan">
+        <div class="stat-label">// Total Preorders</div>
+        <div class="stat-value" id="preorderTotal">0</div>
+      </div>
+      <div class="stat-card amber">
+        <div class="stat-label">// Pending</div>
+        <div class="stat-value" id="preorderPending">0</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">// Total Value (MYR)</div>
+        <div class="stat-value" id="preorderValue">0</div>
+      </div>
+    </div>
+
+    <!-- PREORDER TABLE -->
+    <div id="preorderContent"></div>
+
+  </div> <!-- end pagPreorder -->
+
 </div> <!-- end wrapper -->
+
+<!-- PREORDER ADD/EDIT MODAL -->
+<div class="modal-backdrop" id="preorderModal">
+  <div class="modal" style="max-width:560px;">
+    <div class="corner-deco tl"></div><div class="corner-deco tr"></div>
+    <div class="corner-deco bl"></div><div class="corner-deco br"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="preorderModalTitle">ADD PREORDER</div>
+      <button class="modal-close" onclick="closePreorderModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Brand</label>
+          <input class="form-input" type="text" id="pfBrand" list="pfBrandList" placeholder="e.g. Bandai">
+          <datalist id="pfBrandList">
+            <option value="Bandai"><option value="Kotobukiya"><option value="Hasegawa"><option value="Wave"><option value="Aoshima"><option value="Fine Molds">
+          </datalist>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Scale</label>
+          <input class="form-input" type="text" id="pfScale" list="pfScaleList" placeholder="e.g. 1/144">
+          <datalist id="pfScaleList">
+            <option value="1/144"><option value="1/100"><option value="1/60"><option value="1/48"><option value="1/35"><option value="1/72"><option value="Non-Scale">
+          </datalist>
+        </div>
+        <div class="form-group form-full">
+          <label class="form-label">Model Designation</label>
+          <input class="form-input" type="text" id="pfModel" placeholder="e.g. RX-78-2 Gundam Ver.Ka">
+        </div>
+        <div class="form-group">
+          <label class="form-label">ETA</label>
+          <input class="form-input" type="month" id="pfEta">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Price (MYR)</label>
+          <input class="form-input" type="number" id="pfPrice" min="0" step="0.01" placeholder="0.00">
+        </div>
+        <div class="form-group form-full">
+          <label class="form-label">Seller</label>
+          <input class="form-input" type="text" id="pfSeller" placeholder="e.g. HobbyLink Japan, Lazada...">
+        </div>
+        <div class="form-group form-full" style="display:flex;align-items:center;gap:14px;padding:6px 0;">
+          <label class="form-label" style="margin:0;">Status</label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" id="pfArrived" style="width:16px;height:16px;accent-color:var(--accent-green);cursor:pointer;">
+            <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text-secondary);">ARRIVED / RECEIVED</span>
+          </label>
+        </div>
+        <div class="form-group form-full">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <label class="form-label">Image <span style="color:var(--text-muted);font-size:9px;letter-spacing:1px">(OPTIONAL)</span></label>
+            <button class="btn btn-primary btn-sm" id="pfAutoFindBtn" onclick="autoFindPreorderImage()" type="button" style="font-size:10px;padding:4px 10px;letter-spacing:1px;">
+              <span id="pfAutoFindBtnText">⚡ AUTO-FIND</span>
+            </button>
+          </div>
+          <div class="img-upload-area" id="pfImgUploadArea" onclick="document.getElementById('pfImage').click()">
+            <div class="img-upload-placeholder" id="pfImgPlaceholder">
+              <div style="font-size:22px;margin-bottom:6px;opacity:0.4">⊕</div>
+              <div>CLICK, DROP, OR PASTE IMAGE</div>
+            </div>
+            <img id="pfImgPreview" class="img-preview" src="" alt="preview" style="display:none">
+            <button class="img-clear-btn" id="pfImgClearBtn" onclick="clearPreorderImage(event)" style="display:none">✕</button>
+          </div>
+          <input type="file" id="pfImage" accept="image/*" style="display:none" onchange="handlePreorderImageUpload(event)">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closePreorderModal()" style="border-color:var(--border-panel);color:var(--text-secondary)">CANCEL</button>
+      <button class="btn btn-primary" onclick="savePreorderEntry()">SAVE PREORDER</button>
+    </div>
+  </div>
+</div>
 
 <!-- ADD/EDIT MODAL -->
 <div class="modal-backdrop" id="entryModal">
@@ -2304,16 +2464,17 @@ async function gistPull(silent = false) {
     } else if (pulled && typeof pulled === 'object') {
       if (Array.isArray(pulled.backlog)) { data = pulled.backlog; save(); }
       if (Array.isArray(pulled.qmsv)) { qmsvData = pulled.qmsv; saveQmsv(); }
+      if (Array.isArray(pulled.preorders)) { preorderData = pulled.preorders; savePreorders(); }
     } else { if (!silent) showToast('INVALID DATA FORMAT', true); return; }
 
     renderTable();
     renderQmsv();
-    save();
-    saveQmsv();
+    renderPreorders();
+    save(); saveQmsv(); savePreorders();
     const b = document.getElementById('imagesBanner');
     if (b) b.style.display = 'none';
     if (!silent) closeSyncModal();
-    showToast(`PULLED — ${data.length} BACKLOG + ${qmsvData.length} QMSV`);
+    showToast(`PULLED — ${data.length} BACKLOG · ${qmsvData.length} QMSV · ${preorderData.length} PREORDERS`);
   } catch (err) { if (!silent) showToast(`PULL FAILED — ${err.message}`, true); }
 }
 
@@ -2322,7 +2483,7 @@ async function gistPush() {
   if (!token) { showToast('SET GITHUB TOKEN IN SETTINGS', true); openSettingsModal(); return; }
   showToast('PUSHING TO GIST...');
   const gistId = localStorage.getItem('gist_id');
-  const content = JSON.stringify({ backlog: data, qmsv: qmsvData }, null, 2);
+  const content = JSON.stringify({ backlog: data, qmsv: qmsvData, preorders: preorderData }, null, 2);
   const headers = {
     'Authorization': `Bearer ${token}`,
     'Accept': 'application/vnd.github+json',
@@ -2354,7 +2515,7 @@ async function gistPush() {
     if (gistInput) gistInput.value = json.id;
     updateSyncModalStatus();
     updateGithubStatus();
-    showToast(`PUSHED — ${data.length} BACKLOG + ${qmsvData.length} QMSV`);
+    showToast(`PUSHED — ${data.length} BACKLOG · ${qmsvData.length} QMSV · ${preorderData.length} PREORDERS`);
   } catch (err) { showToast(`PUSH FAILED — ${err.message}`, true); }
 }
 
@@ -2377,9 +2538,12 @@ document.getElementById('syncModal').addEventListener('click', function(e) {
 function switchPage(page) {
   document.getElementById('pagBacklog').style.display = page === 'backlog' ? '' : 'none';
   document.getElementById('pagQmsv').style.display = page === 'qmsv' ? '' : 'none';
+  document.getElementById('pagPreorder').style.display = page === 'preorder' ? '' : 'none';
   document.getElementById('tabBacklog').classList.toggle('active', page === 'backlog');
   document.getElementById('tabQmsv').classList.toggle('active', page === 'qmsv');
+  document.getElementById('tabPreorder').classList.toggle('active', page === 'preorder');
   if (page === 'qmsv') renderQmsv();
+  if (page === 'preorder') renderPreorders();
 }
 
 // QMSV DATA
@@ -2671,9 +2835,279 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+// PREORDER DATA
+let preorderData = [];
+let preorderEditId = null;
+let preorderCurrentImage = null;
+const PREORDER_STORAGE_KEY = 'gunpla_preorders_v1';
+
+function loadPreorders() {
+  try {
+    const raw = localStorage.getItem(PREORDER_STORAGE_KEY);
+    preorderData = raw ? JSON.parse(raw) : [];
+  } catch { preorderData = []; }
+}
+
+function savePreorders() {
+  const slim = preorderData.map(d => { const {image, ...rest} = d; return rest; });
+  try { localStorage.setItem(PREORDER_STORAGE_KEY, JSON.stringify(slim)); } catch(e) { console.warn('localStorage full:', e); }
+}
+
+function renderPreorders() {
+  const q = (document.getElementById('preorderSearch')?.value || '').toLowerCase();
+  const filter = document.getElementById('preorderFilter')?.value || 'all';
+  let rows = preorderData.filter(d => {
+    const matchQ = (d.model||'').toLowerCase().includes(q) || (d.brand||'').toLowerCase().includes(q) || (d.seller||'').toLowerCase().includes(q);
+    const matchF = filter === 'all' || (filter === 'arrived' && d.arrived) || (filter === 'pending' && !d.arrived);
+    return matchQ && matchF;
+  });
+
+  const total = preorderData.length;
+  const pending = preorderData.filter(d => !d.arrived).length;
+  const totalVal = preorderData.reduce((s, d) => s + (parseFloat(d.price)||0), 0);
+  document.getElementById('preorderTotal').textContent = total;
+  document.getElementById('preorderPending').textContent = pending;
+  document.getElementById('preorderValue').textContent = 'RM ' + totalVal.toFixed(2);
+
+  const content = document.getElementById('preorderContent');
+  const emptyHtml = `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">◈</div><div class="empty-text">NO PREORDERS // ADD ONE TO BEGIN</div></div></td></tr>`;
+
+  content.innerHTML = `
+    <div class="table-panel" style="position:relative;margin-bottom:20px;">
+      <div class="corner-deco tl"></div><div class="corner-deco tr"></div>
+      <div class="corner-deco bl"></div><div class="corner-deco br"></div>
+      <div class="table-header">
+        <div class="table-title">// PREORDER LOG</div>
+        <div class="table-count">${rows.length} / ${total} PREORDERS</div>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="td-no">#</th>
+              <th style="width:80px"></th>
+              <th>BRAND</th>
+              <th>MODEL</th>
+              <th>ETA</th>
+              <th style="text-align:right">PRICE (MYR)</th>
+              <th>SELLER</th>
+              <th>STATUS</th>
+              <th style="text-align:right">ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody>${rows.length === 0 ? emptyHtml : rows.map((d, i) => `
+            <tr style="${d.arrived ? 'opacity:0.6;' : ''}">
+              <td class="td-no">${String(i+1).padStart(3,'0')}</td>
+              <td class="td-thumb">${d.image ? `<img src="${d.image}" class="row-thumb" onclick="openPreorderImageViewer('${d.id}')" title="View image">` : `<div class="row-thumb-empty">◈</div>`}</td>
+              <td><span class="brand-pill ${getBrandClass(d.brand)}">${escHtml(d.brand||'—')}</span></td>
+              <td class="td-model">${escHtml(d.model||'—')}</td>
+              <td class="po-eta">${d.eta ? formatEta(d.eta) : '—'}</td>
+              <td class="td-price">RM ${parseFloat(d.price||0).toFixed(2)}</td>
+              <td class="po-seller">${escHtml(d.seller||'—')}</td>
+              <td>
+                <span class="${d.arrived ? 'po-status-arrived' : 'po-status-pending'}" style="cursor:pointer;" onclick="togglePreorderArrived('${d.id}')" title="Toggle status">
+                  ${d.arrived ? 'ARRIVED' : 'PENDING'}
+                </span>
+              </td>
+              <td class="td-actions"><div class="td-actions-inner">
+                <button class="btn btn-primary btn-sm btn-icon" onclick="openPreorderEditModal('${d.id}')" title="Edit">✎</button>
+                <button class="btn btn-danger btn-sm btn-icon" onclick="deletePreorderEntry('${d.id}')" title="Delete">✕</button>
+              </div></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+function formatEta(eta) {
+  if (!eta) return '—';
+  const [y, m] = eta.split('-');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${months[parseInt(m)-1]} ${y}`;
+}
+
+function openPreorderAddModal() {
+  preorderEditId = null;
+  document.getElementById('preorderModalTitle').textContent = 'ADD PREORDER';
+  document.getElementById('pfBrand').value = '';
+  document.getElementById('pfScale').value = '';
+  document.getElementById('pfModel').value = '';
+  document.getElementById('pfEta').value = '';
+  document.getElementById('pfPrice').value = '';
+  document.getElementById('pfSeller').value = '';
+  document.getElementById('pfArrived').checked = false;
+  resetPreorderImageUI(null);
+  document.getElementById('preorderModal').classList.add('open');
+}
+
+function openPreorderEditModal(id) {
+  const entry = preorderData.find(d => d.id === id);
+  if (!entry) return;
+  preorderEditId = id;
+  document.getElementById('preorderModalTitle').textContent = 'EDIT PREORDER';
+  document.getElementById('pfBrand').value = entry.brand || '';
+  document.getElementById('pfScale').value = entry.scale || '';
+  document.getElementById('pfModel').value = entry.model || '';
+  document.getElementById('pfEta').value = entry.eta || '';
+  document.getElementById('pfPrice').value = entry.price || '';
+  document.getElementById('pfSeller').value = entry.seller || '';
+  document.getElementById('pfArrived').checked = !!entry.arrived;
+  resetPreorderImageUI(entry.image || null);
+  document.getElementById('preorderModal').classList.add('open');
+}
+
+function closePreorderModal() { document.getElementById('preorderModal').classList.remove('open'); }
+
+function savePreorderEntry() {
+  const model = document.getElementById('pfModel').value.trim();
+  if (!model) { showToast('MODEL NAME IS REQUIRED', true); return; }
+  const entry = {
+    brand: document.getElementById('pfBrand').value.trim(),
+    scale: document.getElementById('pfScale').value.trim(),
+    model,
+    eta: document.getElementById('pfEta').value,
+    price: parseFloat(document.getElementById('pfPrice').value) || 0,
+    seller: document.getElementById('pfSeller').value.trim(),
+    arrived: document.getElementById('pfArrived').checked,
+    image: preorderCurrentImage || null,
+  };
+  if (preorderEditId) {
+    const idx = preorderData.findIndex(d => d.id === preorderEditId);
+    if (idx !== -1) preorderData[idx] = { ...preorderData[idx], ...entry };
+    showToast('PREORDER UPDATED');
+  } else {
+    preorderData.push({ id: genId(), ...entry });
+    showToast('PREORDER ADDED');
+  }
+  savePreorders();
+  renderPreorders();
+  closePreorderModal();
+}
+
+function togglePreorderArrived(id) {
+  const entry = preorderData.find(d => d.id === id);
+  if (!entry) return;
+  entry.arrived = !entry.arrived;
+  savePreorders();
+  renderPreorders();
+  showToast(entry.arrived ? 'MARKED AS ARRIVED' : 'MARKED AS PENDING');
+}
+
+function deletePreorderEntry(id) {
+  if (!confirm('Delete this preorder?')) return;
+  preorderData = preorderData.filter(d => d.id !== id);
+  savePreorders();
+  renderPreorders();
+  showToast('PREORDER REMOVED');
+}
+
+function resetPreorderImageUI(existingImage = null) {
+  preorderCurrentImage = existingImage;
+  const preview = document.getElementById('pfImgPreview');
+  const placeholder = document.getElementById('pfImgPlaceholder');
+  const clearBtn = document.getElementById('pfImgClearBtn');
+  document.getElementById('pfImage').value = '';
+  if (existingImage) {
+    preview.src = existingImage; preview.style.display = 'block';
+    placeholder.style.display = 'none'; clearBtn.style.display = 'flex';
+  } else {
+    preview.src = ''; preview.style.display = 'none';
+    placeholder.style.display = 'block'; clearBtn.style.display = 'none';
+  }
+}
+
+function handlePreorderImageUpload(evt) {
+  const file = evt.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 400; const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale); canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+      preorderCurrentImage = dataUrl;
+      document.getElementById('pfImgPreview').src = dataUrl;
+      document.getElementById('pfImgPreview').style.display = 'block';
+      document.getElementById('pfImgPlaceholder').style.display = 'none';
+      document.getElementById('pfImgClearBtn').style.display = 'flex';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearPreorderImage(e) { e.stopPropagation(); resetPreorderImageUI(null); }
+
+function openPreorderImageViewer(id) {
+  const entry = preorderData.find(d => d.id === id);
+  if (!entry || !entry.image) return;
+  document.getElementById('imgViewerImg').src = entry.image;
+  document.getElementById('imgViewer').classList.add('open');
+}
+
+async function autoFindPreorderImage() {
+  const model = document.getElementById('pfModel').value.trim();
+  const brand = document.getElementById('pfBrand').value.trim();
+  const scale = document.getElementById('pfScale').value.trim();
+  if (!model) { showToast('ENTER MODEL NAME FIRST', true); return; }
+  const workerUrl = localStorage.getItem('worker_url');
+  if (!workerUrl) { showToast('ADD WORKER URL IN SETTINGS FIRST', true); openSettingsModal(); return; }
+  const btn = document.getElementById('pfAutoFindBtn');
+  const btnText = document.getElementById('pfAutoFindBtnText');
+  btn.disabled = true; btnText.textContent = '⟳ SEARCHING...';
+  const query = [brand, scale, model, 'model kit box art'].filter(Boolean).join(' ');
+  try {
+    const res = await fetch(`${workerUrl.replace(/\/$/, '')}?q=${encodeURIComponent(query)}`);
+    if (!res.ok) throw new Error();
+    const json = await res.json();
+    const urls = (json.images || []).map(img => img.url).filter(Boolean);
+    if (!urls.length) throw new Error();
+    openImagePicker(urls);
+  } catch { showToast('SEARCH FAILED', true); }
+  finally { btn.disabled = false; btnText.textContent = '⚡ AUTO-FIND'; }
+}
+
+// Paste support for preorder modal
+document.addEventListener('paste', e => {
+  const modal = document.getElementById('preorderModal');
+  if (!modal.classList.contains('open')) return;
+  const items = (e.clipboardData || e.originalEvent?.clipboardData)?.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      e.preventDefault();
+      const file = item.getAsFile();
+      if (file) handlePreorderImageUpload({ target: { files: [file] } });
+      break;
+    }
+  }
+});
+
+// Drag & drop for preorder modal
+document.addEventListener('DOMContentLoaded', () => {
+  const area = document.getElementById('pfImgUploadArea');
+  if (!area) return;
+  area.addEventListener('dragover', e => { e.preventDefault(); area.classList.add('drag-over'); });
+  area.addEventListener('dragleave', () => area.classList.remove('drag-over'));
+  area.addEventListener('drop', e => {
+    e.preventDefault(); area.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) handlePreorderImageUpload({ target: { files: [file] } });
+  });
+});
+
+document.getElementById('preorderModal').addEventListener('click', function(e) {
+  if (e.target === this) closePreorderModal();
+});
+
 load();
 data = data.map((d, i) => ({ no: i + 1, ...d }));
 loadQmsv();
+loadPreorders();
 updateGithubStatus();
 renderTable();
 checkImagesBanner();
@@ -2684,7 +3118,7 @@ checkImagesBanner();
   const gistId = localStorage.getItem('gist_id');
   if (token && gistId) {
     showToast('AUTO-SYNCING FROM GIST...');
-    await gistPull(true); // silent mode — won't close modal or show redundant toast
+    await gistPull(true);
   }
 })();
 </script>
