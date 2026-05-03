@@ -1546,7 +1546,15 @@
         </div>
         <div class="form-group">
           <label class="form-label">Price (MYR)</label>
-          <input class="form-input" type="number" id="pfPrice" min="0" step="0.01" placeholder="0.00">
+          <input class="form-input" type="number" id="pfPrice" min="0" step="0.01" placeholder="0.00" oninput="calcBalance()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Paid (MYR)</label>
+          <input class="form-input" type="number" id="pfPaid" min="0" step="0.01" placeholder="0.00" oninput="calcBalance()">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Balance (MYR)</label>
+          <input class="form-input" type="number" id="pfBalance" placeholder="0.00" readonly style="background:var(--bg-deep);color:var(--accent-amber);font-family:'Share Tech Mono',monospace;">
         </div>
         <div class="form-group form-full">
           <label class="form-label">Seller</label>
@@ -2292,7 +2300,7 @@ async function autoFindImage() {
     const urls = (json.images || []).map(img => img.url).filter(Boolean);
     if (!urls.length) throw new Error('No images found');
 
-    openImagePicker(urls);
+    openImagePicker(urls, 'backlog');
   } catch (err) {
     showToast('SEARCH FAILED — CHECK WORKER URL', true);
   } finally {
@@ -2301,7 +2309,10 @@ async function autoFindImage() {
   }
 }
 
-function openImagePicker(urls) {
+let pickerContext = 'backlog'; // tracks which modal opened the picker
+
+function openImagePicker(urls, context = 'backlog') {
+  pickerContext = context;
   const grid = document.getElementById('pickerGrid');
   const status = document.getElementById('pickerStatus');
   status.textContent = `// FOUND ${urls.length} IMAGES — CLICK TO SELECT`;
@@ -2328,7 +2339,6 @@ function closeImagePicker() {
 }
 
 function selectPickerImage(url) {
-  // Load the URL into a canvas via Image to convert to base64
   const status = document.getElementById('pickerStatus');
   status.textContent = '// LOADING IMAGE...';
 
@@ -2342,11 +2352,27 @@ function selectPickerImage(url) {
     canvas.height = Math.round(img.height * scale);
     canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
     const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
-    currentImage = dataUrl;
-    document.getElementById('imgPreview').src = dataUrl;
-    document.getElementById('imgPreview').style.display = 'block';
-    document.getElementById('imgPlaceholder').style.display = 'none';
-    document.getElementById('imgClearBtn').style.display = 'flex';
+
+    if (pickerContext === 'qmsv') {
+      qmsvCurrentImage = dataUrl;
+      document.getElementById('qmsvImgPreview').src = dataUrl;
+      document.getElementById('qmsvImgPreview').style.display = 'block';
+      document.getElementById('qmsvImgPlaceholder').style.display = 'none';
+      document.getElementById('qmsvImgClearBtn').style.display = 'flex';
+    } else if (pickerContext === 'preorder') {
+      preorderCurrentImage = dataUrl;
+      document.getElementById('pfImgPreview').src = dataUrl;
+      document.getElementById('pfImgPreview').style.display = 'block';
+      document.getElementById('pfImgPlaceholder').style.display = 'none';
+      document.getElementById('pfImgClearBtn').style.display = 'flex';
+    } else {
+      currentImage = dataUrl;
+      document.getElementById('imgPreview').src = dataUrl;
+      document.getElementById('imgPreview').style.display = 'block';
+      document.getElementById('imgPlaceholder').style.display = 'none';
+      document.getElementById('imgClearBtn').style.display = 'flex';
+    }
+
     closeImagePicker();
     showToast('IMAGE SELECTED');
   };
@@ -2797,7 +2823,7 @@ async function autoFindQmsvImage() {
     const json = await res.json();
     const urls = (json.images || []).map(img => img.url).filter(Boolean);
     if (!urls.length) throw new Error();
-    openImagePicker(urls);
+    openImagePicker(urls, 'qmsv');
   } catch { showToast('SEARCH FAILED', true); }
   finally { btn.disabled = false; btnText.textContent = '⚡ AUTO-FIND'; }
 }
@@ -2853,71 +2879,66 @@ function savePreorders() {
   try { localStorage.setItem(PREORDER_STORAGE_KEY, JSON.stringify(slim)); } catch(e) { console.warn('localStorage full:', e); }
 }
 
+function calcBalance() {
+  const price = parseFloat(document.getElementById('pfPrice').value) || 0;
+  const paid = parseFloat(document.getElementById('pfPaid').value) || 0;
+  document.getElementById('pfBalance').value = (price - paid).toFixed(2);
+}
+
+function buildPreorderRow(d, i) {
+  const balance = parseFloat(d.price||0) - parseFloat(d.paid||0);
+  const balColor = balance > 0 ? 'var(--accent-red)' : 'var(--accent-green)';
+  const imgCell = d.image
+    ? '<img src="' + d.image + '" class="row-thumb" onclick="openPreorderImageViewer(\'' + d.id + '\')" title="View image">'
+    : '<div class="row-thumb-empty">◈</div>';
+  return '<tr style="' + (d.arrived ? 'opacity:0.6;' : '') + '">'
+    + '<td class="td-no">' + String(i+1).padStart(3,'0') + '</td>'
+    + '<td class="td-thumb">' + imgCell + '</td>'
+    + '<td><span class="brand-pill ' + getBrandClass(d.brand) + '">' + escHtml(d.brand||'—') + '</span></td>'
+    + '<td class="td-model">' + escHtml(d.model||'—') + '</td>'
+    + '<td class="po-eta">' + (d.eta ? formatEta(d.eta) : '—') + '</td>'
+    + '<td class="td-price">RM ' + parseFloat(d.price||0).toFixed(2) + '</td>'
+    + '<td class="td-price" style="color:var(--accent-green);">RM ' + parseFloat(d.paid||0).toFixed(2) + '</td>'
+    + '<td class="td-price" style="color:' + balColor + ';">RM ' + balance.toFixed(2) + '</td>'
+    + '<td class="po-seller">' + escHtml(d.seller||'—') + '</td>'
+    + '<td><span class="' + (d.arrived ? 'po-status-arrived' : 'po-status-pending') + '" style="cursor:pointer;" onclick="togglePreorderArrived(\'' + d.id + '\')" title="Toggle status">' + (d.arrived ? 'ARRIVED' : 'PENDING') + '</span></td>'
+    + '<td class="td-actions"><div class="td-actions-inner">'
+    + '<button class="btn btn-primary btn-sm btn-icon" onclick="openPreorderEditModal(\'' + d.id + '\')" title="Edit">✎</button>'
+    + '<button class="btn btn-danger btn-sm btn-icon" onclick="deletePreorderEntry(\'' + d.id + '\')" title="Delete">✕</button>'
+    + '</div></td></tr>';
+}
+
 function renderPreorders() {
   const q = (document.getElementById('preorderSearch')?.value || '').toLowerCase();
   const filter = document.getElementById('preorderFilter')?.value || 'all';
-  let rows = preorderData.filter(d => {
+  const rows = preorderData.filter(d => {
     const matchQ = (d.model||'').toLowerCase().includes(q) || (d.brand||'').toLowerCase().includes(q) || (d.seller||'').toLowerCase().includes(q);
     const matchF = filter === 'all' || (filter === 'arrived' && d.arrived) || (filter === 'pending' && !d.arrived);
     return matchQ && matchF;
   });
-
   const total = preorderData.length;
   const pending = preorderData.filter(d => !d.arrived).length;
   const totalVal = preorderData.reduce((s, d) => s + (parseFloat(d.price)||0), 0);
   document.getElementById('preorderTotal').textContent = total;
   document.getElementById('preorderPending').textContent = pending;
   document.getElementById('preorderValue').textContent = 'RM ' + totalVal.toFixed(2);
-
   const content = document.getElementById('preorderContent');
-  const emptyHtml = `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">◈</div><div class="empty-text">NO PREORDERS // ADD ONE TO BEGIN</div></div></td></tr>`;
-
-  content.innerHTML = `
-    <div class="table-panel" style="position:relative;margin-bottom:20px;">
-      <div class="corner-deco tl"></div><div class="corner-deco tr"></div>
-      <div class="corner-deco bl"></div><div class="corner-deco br"></div>
-      <div class="table-header">
-        <div class="table-title">// PREORDER LOG</div>
-        <div class="table-count">${rows.length} / ${total} PREORDERS</div>
-      </div>
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th class="td-no">#</th>
-              <th style="width:80px"></th>
-              <th>BRAND</th>
-              <th>MODEL</th>
-              <th>ETA</th>
-              <th style="text-align:right">PRICE (MYR)</th>
-              <th>SELLER</th>
-              <th>STATUS</th>
-              <th style="text-align:right">ACTIONS</th>
-            </tr>
-          </thead>
-          <tbody>${rows.length === 0 ? emptyHtml : rows.map((d, i) => `
-            <tr style="${d.arrived ? 'opacity:0.6;' : ''}">
-              <td class="td-no">${String(i+1).padStart(3,'0')}</td>
-              <td class="td-thumb">${d.image ? `<img src="${d.image}" class="row-thumb" onclick="openPreorderImageViewer('${d.id}')" title="View image">` : `<div class="row-thumb-empty">◈</div>`}</td>
-              <td><span class="brand-pill ${getBrandClass(d.brand)}">${escHtml(d.brand||'—')}</span></td>
-              <td class="td-model">${escHtml(d.model||'—')}</td>
-              <td class="po-eta">${d.eta ? formatEta(d.eta) : '—'}</td>
-              <td class="td-price">RM ${parseFloat(d.price||0).toFixed(2)}</td>
-              <td class="po-seller">${escHtml(d.seller||'—')}</td>
-              <td>
-                <span class="${d.arrived ? 'po-status-arrived' : 'po-status-pending'}" style="cursor:pointer;" onclick="togglePreorderArrived('${d.id}')" title="Toggle status">
-                  ${d.arrived ? 'ARRIVED' : 'PENDING'}
-                </span>
-              </td>
-              <td class="td-actions"><div class="td-actions-inner">
-                <button class="btn btn-primary btn-sm btn-icon" onclick="openPreorderEditModal('${d.id}')" title="Edit">✎</button>
-                <button class="btn btn-danger btn-sm btn-icon" onclick="deletePreorderEntry('${d.id}')" title="Delete">✕</button>
-              </div></td>
-            </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>
-    </div>`;
+  const emptyRow = '<tr><td colspan="11"><div class="empty-state"><div class="empty-icon">◈</div><div class="empty-text">NO PREORDERS // ADD ONE TO BEGIN</div></div></td></tr>';
+  const tbody = rows.length === 0 ? emptyRow : rows.map(buildPreorderRow).join('');
+  content.innerHTML =
+    '<div class="table-panel" style="position:relative;margin-bottom:20px;">'
+    + '<div class="corner-deco tl"></div><div class="corner-deco tr"></div>'
+    + '<div class="corner-deco bl"></div><div class="corner-deco br"></div>'
+    + '<div class="table-header"><div class="table-title">// PREORDER LOG</div>'
+    + '<div class="table-count">' + rows.length + ' / ' + total + ' PREORDERS</div></div>'
+    + '<div class="table-wrap"><table class="data-table"><thead><tr>'
+    + '<th class="td-no">#</th><th style="width:80px"></th>'
+    + '<th>BRAND</th><th>MODEL</th><th>ETA</th>'
+    + '<th style="text-align:right">PRICE (MYR)</th>'
+    + '<th style="text-align:right">PAID (MYR)</th>'
+    + '<th style="text-align:right">BALANCE (MYR)</th>'
+    + '<th>SELLER</th><th>STATUS</th><th style="text-align:right">ACTIONS</th>'
+    + '</tr></thead><tbody>' + tbody + '</tbody></table></div></div>';
 }
 
 function formatEta(eta) {
@@ -2935,6 +2956,8 @@ function openPreorderAddModal() {
   document.getElementById('pfModel').value = '';
   document.getElementById('pfEta').value = '';
   document.getElementById('pfPrice').value = '';
+  document.getElementById('pfPaid').value = '';
+  document.getElementById('pfBalance').value = '';
   document.getElementById('pfSeller').value = '';
   document.getElementById('pfArrived').checked = false;
   resetPreorderImageUI(null);
@@ -2951,6 +2974,8 @@ function openPreorderEditModal(id) {
   document.getElementById('pfModel').value = entry.model || '';
   document.getElementById('pfEta').value = entry.eta || '';
   document.getElementById('pfPrice').value = entry.price || '';
+  document.getElementById('pfPaid').value = entry.paid || '';
+  document.getElementById('pfBalance').value = (parseFloat(entry.price||0) - parseFloat(entry.paid||0)).toFixed(2);
   document.getElementById('pfSeller').value = entry.seller || '';
   document.getElementById('pfArrived').checked = !!entry.arrived;
   resetPreorderImageUI(entry.image || null);
@@ -2968,6 +2993,7 @@ function savePreorderEntry() {
     model,
     eta: document.getElementById('pfEta').value,
     price: parseFloat(document.getElementById('pfPrice').value) || 0,
+    paid: parseFloat(document.getElementById('pfPaid').value) || 0,
     seller: document.getElementById('pfSeller').value.trim(),
     arrived: document.getElementById('pfArrived').checked,
     image: preorderCurrentImage || null,
@@ -3066,7 +3092,7 @@ async function autoFindPreorderImage() {
     const json = await res.json();
     const urls = (json.images || []).map(img => img.url).filter(Boolean);
     if (!urls.length) throw new Error();
-    openImagePicker(urls);
+    openImagePicker(urls, 'preorder');
   } catch { showToast('SEARCH FAILED', true); }
   finally { btn.disabled = false; btnText.textContent = '⚡ AUTO-FIND'; }
 }
