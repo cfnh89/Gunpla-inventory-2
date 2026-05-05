@@ -1575,8 +1575,22 @@
     </div>
     <div class="toolbar-divider"></div>
     <div class="toolbar-group">
-      <label class="sort-label">SORT BY</label>
-      <select class="sort-select" id="sortSelect" onchange="onSortSelect()">
+      <label class="sort-label">SORT</label>
+      <select class="sort-select" id="sortSelect" onchange="onSortSelect()" title="Primary sort">
+        <option value="brand-asc">Brand (A→Z)</option>
+        <option value="brand-desc">Brand (Z→A)</option>
+        <option value="model-asc">Model (A→Z)</option>
+        <option value="model-desc">Model (Z→A)</option>
+        <option value="scale-asc">Scale (A→Z)</option>
+        <option value="scale-desc">Scale (Z→A)</option>
+        <option value="units-desc">Units (High→Low)</option>
+        <option value="units-asc">Units (Low→High)</option>
+        <option value="price-desc">Price (High→Low)</option>
+        <option value="price-asc">Price (Low→High)</option>
+      </select>
+      <label class="sort-label" style="margin-left:4px;">THEN</label>
+      <select class="sort-select" id="sortSelect2" onchange="onSortSelect()" title="Secondary sort">
+        <option value="none">—</option>
         <option value="brand-asc">Brand (A→Z)</option>
         <option value="brand-desc">Brand (Z→A)</option>
         <option value="model-asc">Model (A→Z)</option>
@@ -1589,12 +1603,7 @@
         <option value="price-asc">Price (Low→High)</option>
       </select>
     </div>
-    <div class="toolbar-divider"></div>
-    <div class="search-wrap">
-      <span class="search-icon">⌕</span>
-      <input type="text" id="searchInput" placeholder="SEARCH MODEL / BRAND..." oninput="renderTable()">
     </div>
-  </div>
 
   <!-- BACKLOG CONTENT (table or cards) -->
   <div id="backlogContent"></div>
@@ -1640,17 +1649,23 @@
       </div>
       <div class="toolbar-divider"></div>
       <div class="toolbar-group">
-        <label class="sort-label">FILTER</label>
-        <select class="sort-select" id="qmsvFilter" onchange="renderQmsv()">
-          <option value="all">All</option>
-          <option value="owned">Owned</option>
-          <option value="missing">Not Owned</option>
+        <label class="sort-label">SORT</label>
+        <select class="sort-select" id="qmsvSort" onchange="renderQmsv()" title="Primary sort">
+          <option value="series-asc">Series (A→Z)</option>
+          <option value="series-desc">Series (Z→A)</option>
+          <option value="variant-asc">Variant (A→Z)</option>
+          <option value="variant-desc">Variant (Z→A)</option>
+          <option value="owned-desc">Owned First</option>
+          <option value="owned-asc">Missing First</option>
         </select>
-      </div>
-      <div class="toolbar-divider"></div>
-      <div class="search-wrap">
-        <span class="search-icon">⌕</span>
-        <input type="text" id="qmsvSearch" placeholder="SEARCH SERIES / VARIANT..." oninput="renderQmsv()">
+        <label class="sort-label" style="margin-left:4px;">THEN</label>
+        <select class="sort-select" id="qmsvSort2" onchange="renderQmsv()" title="Secondary sort">
+          <option value="none">—</option>
+          <option value="series-asc">Series (A→Z)</option>
+          <option value="series-desc">Series (Z→A)</option>
+          <option value="variant-asc">Variant (A→Z)</option>
+          <option value="variant-desc">Variant (Z→A)</option>
+        </select>
       </div>
     </div>
 
@@ -1695,7 +1710,7 @@
       <div class="toolbar-divider"></div>
       <div class="toolbar-group">
         <label class="sort-label">SORT</label>
-        <select class="sort-select" id="preorderSort" onchange="renderPreorders()">
+        <select class="sort-select" id="preorderSort" onchange="renderPreorders()" title="Primary sort">
           <option value="default-asc">Default</option>
           <option value="brand-asc">Brand (A→Z)</option>
           <option value="brand-desc">Brand (Z→A)</option>
@@ -1708,20 +1723,20 @@
           <option value="balance-desc">Balance (High→Low)</option>
           <option value="seller-asc">Seller (A→Z)</option>
         </select>
-      </div>
-      <div class="toolbar-divider"></div>
-      <div class="toolbar-group">
-        <label class="sort-label">FILTER</label>
-        <select class="sort-select" id="preorderFilter" onchange="renderPreorders()">
-          <option value="all">All</option>
-          <option value="pending">Pending</option>
-          <option value="arrived">Arrived</option>
+        <label class="sort-label" style="margin-left:4px;">THEN</label>
+        <select class="sort-select" id="preorderSort2" onchange="renderPreorders()" title="Secondary sort">
+          <option value="none">—</option>
+          <option value="brand-asc">Brand (A→Z)</option>
+          <option value="brand-desc">Brand (Z→A)</option>
+          <option value="model-asc">Model (A→Z)</option>
+          <option value="model-desc">Model (Z→A)</option>
+          <option value="eta-asc">ETA (Earliest)</option>
+          <option value="eta-desc">ETA (Latest)</option>
+          <option value="price-asc">Price (Low→High)</option>
+          <option value="price-desc">Price (High→Low)</option>
+          <option value="balance-desc">Balance (High→Low)</option>
+          <option value="seller-asc">Seller (A→Z)</option>
         </select>
-      </div>
-      <div class="toolbar-divider"></div>
-      <div class="search-wrap">
-        <span class="search-icon">⌕</span>
-        <input type="text" id="preorderSearch" placeholder="SEARCH MODEL / BRAND / SELLER..." oninput="renderPreorders()">
       </div>
     </div>
 
@@ -1766,7 +1781,7 @@
       <div class="toolbar-divider"></div>
       <div class="toolbar-group">
         <label class="sort-label">SORT</label>
-        <select class="sort-select" id="collectionSort" onchange="renderCollection()">
+        <select class="sort-select" id="collectionSort" onchange="renderCollection()" title="Primary sort">
           <option value="no-asc">No. (Default)</option>
           <option value="brand-asc">Brand (A→Z)</option>
           <option value="brand-desc">Brand (Z→A)</option>
@@ -1776,11 +1791,17 @@
           <option value="rating-desc">Rating (High→Low)</option>
           <option value="rating-asc">Rating (Low→High)</option>
         </select>
-      </div>
-      <div class="toolbar-divider"></div>
-      <div class="search-wrap">
-        <span class="search-icon">⌕</span>
-        <input type="text" id="collectionSearch" placeholder="SEARCH NAME / BRAND..." oninput="renderCollection()">
+        <label class="sort-label" style="margin-left:4px;">THEN</label>
+        <select class="sort-select" id="collectionSort2" onchange="renderCollection()" title="Secondary sort">
+          <option value="none">—</option>
+          <option value="brand-asc">Brand (A→Z)</option>
+          <option value="brand-desc">Brand (Z→A)</option>
+          <option value="name-asc">Name (A→Z)</option>
+          <option value="name-desc">Name (Z→A)</option>
+          <option value="scale-asc">Scale (A→Z)</option>
+          <option value="rating-desc">Rating (High→Low)</option>
+          <option value="rating-asc">Rating (Low→High)</option>
+        </select>
       </div>
     </div>
 
@@ -2254,11 +2275,39 @@ function getBrandClass(brand) {
 }
 
 function onSortSelect() {
-  const val = document.getElementById('sortSelect').value;
-  const [key, dir] = val.split('-');
-  sortKey = key;
-  sortDir = dir === 'asc' ? 1 : -1;
   renderTable();
+}
+
+// Shared multi-level sort helper
+function multiSort(rows, key1, dir1, key2, dir2) {
+  const numKeys = ['price','units','no','rating'];
+  const getSortVal = (d, key) => {
+    if (key === 'model' || key === 'name') return (d.model || d.name || '').toLowerCase();
+    if (numKeys.includes(key)) return parseFloat(d[key] || 0);
+    if (key === 'owned') return d.owned ? 1 : 0;
+    return (d[key] || '').toString().toLowerCase();
+  };
+  return rows.sort((a, b) => {
+    const va = getSortVal(a, key1), vb = getSortVal(b, key1);
+    if (va < vb) return -dir1;
+    if (va > vb) return dir1;
+    // Primary equal — apply secondary sort
+    if (key2 && key2 !== 'none') {
+      const va2 = getSortVal(a, key2), vb2 = getSortVal(b, key2);
+      if (va2 < vb2) return -dir2;
+      if (va2 > vb2) return dir2;
+    }
+    return 0;
+  });
+}
+
+function parseSortVal(selectId, fallbackKey, fallbackDir) {
+  const el = document.getElementById(selectId);
+  if (!el || !el.value || el.value === 'none') return { key: null, dir: 1 };
+  const parts = el.value.split('-');
+  const dir = parts.pop() === 'asc' ? 1 : -1;
+  const key = parts.join('-');
+  return { key: key || fallbackKey, dir };
 }
 
 let backlogView = localStorage.getItem('backlog_view') || 'table';
@@ -2274,22 +2323,11 @@ function setBacklogView(v) {
 }
 
 function renderTable() {
-  const q = document.getElementById('searchInput').value.toLowerCase();
-  let rows = data.filter(d =>
-    (d.model || '').toLowerCase().includes(q) ||
-    (d.brand || '').toLowerCase().includes(q) ||
-    (d.scale || '').toLowerCase().includes(q)
-  );
+  let rows = [...data];
 
-  rows.sort((a, b) => {
-    let va = a[sortKey] ?? '';
-    let vb = b[sortKey] ?? '';
-    if (sortKey === 'price' || sortKey === 'units') { va = +va; vb = +vb; }
-    if (sortKey === 'no') { va = +va; vb = +vb; }
-    if (va < vb) return -sortDir;
-    if (va > vb) return sortDir;
-    return 0;
-  });
+  const p = parseSortVal('sortSelect', 'brand', 1);
+  const s = parseSortVal('sortSelect2', null, 1);
+  multiSort(rows, p.key, p.dir, s.key, s.dir);
 
   // Update toggle button styles
   const tableBtn = document.getElementById('backlogViewTable');
@@ -2980,12 +3018,7 @@ function setQmsvView(v) {
 }
 
 function saveArrangement() {
-  const q = document.getElementById('searchInput').value.toLowerCase();
-  let rows = data.filter(d =>
-    (d.model||'').toLowerCase().includes(q) ||
-    (d.brand||'').toLowerCase().includes(q) ||
-    (d.scale||'').toLowerCase().includes(q)
-  );
+  let rows = [...data];
   rows.sort((a, b) => {
     let va = a[sortKey] ?? '', vb = b[sortKey] ?? '';
     if (['price','units','no'].includes(sortKey)) { va = +va; vb = +vb; }
@@ -3002,13 +3035,12 @@ function saveArrangement() {
 }
 
 function renderQmsv() {
-  const q = (document.getElementById('qmsvSearch')?.value || '').toLowerCase();
-  const filter = document.getElementById('qmsvFilter')?.value || 'all';
-  let rows = qmsvData.filter(d => {
-    const matchQ = (d.series||'').toLowerCase().includes(q) || (d.variant||'').toLowerCase().includes(q);
-    const matchF = filter === 'all' || (filter === 'owned' && d.owned) || (filter === 'missing' && !d.owned);
-    return matchQ && matchF;
-  });
+  let rows = [...qmsvData];
+
+  const p = parseSortVal('qmsvSort', 'series', 1);
+  const s = parseSortVal('qmsvSort2', null, 1);
+  if (p.key) multiSort(rows, p.key, p.dir, s.key, s.dir);
+
   const total = qmsvData.length;
   const owned = qmsvData.filter(d => d.owned).length;
   document.getElementById('qmsvTotal').textContent = total;
@@ -3328,27 +3360,27 @@ function buildPreorderRow(d, i) {
 }
 
 function renderPreorders() {
-  const q = (document.getElementById('preorderSearch')?.value || '').toLowerCase();
-  const filter = document.getElementById('preorderFilter')?.value || 'all';
-  const sortVal = document.getElementById('preorderSort')?.value || 'default-asc';
-  const [sortKey, sortDir] = sortVal.split('-');
+  let rows = [...preorderData];
 
-  let rows = preorderData.filter(d => {
-    const matchQ = (d.model||'').toLowerCase().includes(q) || (d.brand||'').toLowerCase().includes(q) || (d.seller||'').toLowerCase().includes(q);
-    const matchF = filter === 'all' || (filter === 'arrived' && d.arrived) || (filter === 'pending' && !d.arrived);
-    return matchQ && matchF;
-  });
-
-  // Sort
-  if (sortKey !== 'default') {
+  const p = parseSortVal('preorderSort', null, 1);
+  const s = parseSortVal('preorderSort2', null, 1);
+  if (p.key && p.key !== 'default') {
+    // Special keys for preorder
     rows.sort((a, b) => {
-      let va, vb;
-      if (sortKey === 'balance') { va = parseFloat(a.price||0) - parseFloat(a.paid||0); vb = parseFloat(b.price||0) - parseFloat(b.paid||0); }
-      else if (sortKey === 'price') { va = parseFloat(a.price||0); vb = parseFloat(b.price||0); }
-      else if (sortKey === 'eta') { va = a.eta||'9999'; vb = b.eta||'9999'; }
-      else { va = (a[sortKey]||'').toLowerCase(); vb = (b[sortKey]||'').toLowerCase(); }
-      if (va < vb) return sortDir === 'asc' ? -1 : 1;
-      if (va > vb) return sortDir === 'asc' ? 1 : -1;
+      const getVal = (d, key) => {
+        if (key === 'balance') return parseFloat(d.price||0) - parseFloat(d.paid||0);
+        if (key === 'price') return parseFloat(d.price||0);
+        if (key === 'eta') return d.eta || '9999';
+        return (d[key]||'').toLowerCase();
+      };
+      const va = getVal(a, p.key), vb = getVal(b, p.key);
+      if (va < vb) return -p.dir;
+      if (va > vb) return p.dir;
+      if (s.key && s.key !== 'none') {
+        const va2 = getVal(a, s.key), vb2 = getVal(b, s.key);
+        if (va2 < vb2) return -s.dir;
+        if (va2 > vb2) return s.dir;
+      }
       return 0;
     });
   }
@@ -3678,23 +3710,11 @@ function setCollectionRating(id, rating) {
 }
 
 function renderCollection() {
-  const q = (document.getElementById('collectionSearch')?.value || '').toLowerCase();
-  const sortVal = document.getElementById('collectionSort')?.value || 'no-asc';
-  const [sortKey, sortDir] = sortVal.split('-');
+  let rows = [...collectionData];
 
-  let rows = collectionData.filter(d =>
-    (d.name||'').toLowerCase().includes(q) || (d.brand||'').toLowerCase().includes(q) || (d.scale||'').toLowerCase().includes(q)
-  );
-
-  rows.sort((a, b) => {
-    let va, vb;
-    if (sortKey === 'rating') { va = parseFloat(a.rating||0); vb = parseFloat(b.rating||0); }
-    else if (sortKey === 'no') { va = parseInt(a.no||0); vb = parseInt(b.no||0); }
-    else { va = (a[sortKey]||'').toLowerCase(); vb = (b[sortKey]||'').toLowerCase(); }
-    if (va < vb) return sortDir === 'asc' ? -1 : 1;
-    if (va > vb) return sortDir === 'asc' ? 1 : -1;
-    return 0;
-  });
+  const p = parseSortVal('collectionSort', 'no', 1);
+  const s = parseSortVal('collectionSort2', null, 1);
+  multiSort(rows, p.key || 'no', p.dir, s.key, s.dir);
 
   const total = collectionData.length;
   const rated = collectionData.filter(d => d.rating > 0);
