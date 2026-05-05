@@ -1821,9 +1821,7 @@
         <div class="form-group">
           <label class="form-label">Brand</label>
           <input class="form-input" type="text" id="cfBrand" list="cfBrandList" placeholder="e.g. Bandai">
-          <datalist id="cfBrandList">
-            <option value="Bandai"><option value="Kotobukiya"><option value="Hasegawa"><option value="Wave"><option value="Aoshima"><option value="Fine Molds">
-          </datalist>
+          <datalist id="cfBrandList"></datalist>
         </div>
         <div class="form-group">
           <label class="form-label">Scale</label>
@@ -3782,6 +3780,16 @@ function populateCollectionNameList() {
   if (dl) dl.innerHTML = names.map(n => '<option value="' + escHtml(n) + '">').join('');
 }
 
+function populateCollectionBrandList() {
+  const brands = [...new Set([
+    ...data.map(d => d.brand),
+    ...collectionData.map(d => d.brand),
+    ...preorderData.map(d => d.brand)
+  ].filter(Boolean))].sort();
+  const dl = document.getElementById('cfBrandList');
+  if (dl) dl.innerHTML = brands.map(b => '<option value="' + escHtml(b) + '">').join('');
+}
+
 function openCollectionAddModal() {
   collectionEditId = null;
   document.getElementById('collectionModalTitle').textContent = 'ADD KIT';
@@ -3792,6 +3800,7 @@ function openCollectionAddModal() {
   document.getElementById('cfRatingLabel').textContent = 'NOT RATED';
   document.querySelectorAll('.rating-star').forEach(s => s.style.color = 'var(--text-muted)');
   populateCollectionNameList();
+  populateCollectionBrandList();
   resetCollectionImageUI(null);
   document.getElementById('collectionModal').classList.add('open');
 }
@@ -3814,6 +3823,7 @@ function openCollectionEditModal(id) {
     s.style.color = i < (entry.rating||0) ? 'var(--accent-amber)' : 'var(--text-muted)';
   });
   populateCollectionNameList();
+  populateCollectionBrandList();
   resetCollectionImageUI(entry.image || null);
   document.getElementById('collectionModal').classList.add('open');
 }
