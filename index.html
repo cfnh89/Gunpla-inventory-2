@@ -1811,13 +1811,21 @@
         <div class="stat-label">// Total Kits</div>
         <div class="stat-value" id="collectionTotal">0</div>
       </div>
+      <div class="stat-card amber">
+        <div class="stat-label">// 1/60 Scale</div>
+        <div class="stat-value" id="collection60">0</div>
+      </div>
       <div class="stat-card green">
-        <div class="stat-label">// Avg Rating</div>
-        <div class="stat-value" id="collectionAvgRating">—</div>
+        <div class="stat-label">// 1/100 Scale</div>
+        <div class="stat-value" id="collection100">0</div>
+      </div>
+      <div class="stat-card cyan">
+        <div class="stat-label">// 1/144 Scale</div>
+        <div class="stat-value" id="collection144">0</div>
       </div>
       <div class="stat-card amber">
-        <div class="stat-label">// Top Rated</div>
-        <div class="stat-value" id="collectionTopRated" style="font-size:14px;padding-top:4px;">—</div>
+        <div class="stat-label">// Others</div>
+        <div class="stat-value" id="collectionOther">0</div>
       </div>
     </div>
 
@@ -3717,12 +3725,19 @@ function renderCollection() {
   multiSort(rows, p.key || 'no', p.dir, s.key, s.dir);
 
   const total = collectionData.length;
-  const rated = collectionData.filter(d => d.rating > 0);
-  const avgRating = rated.length ? (rated.reduce((s,d) => s + d.rating, 0) / rated.length).toFixed(1) : null;
-  const topRated = [...collectionData].sort((a,b) => (b.rating||0) - (a.rating||0))[0];
+  const s60  = collectionData.filter(d => (d.scale||'').includes('1/60')).length;
+  const s100 = collectionData.filter(d => (d.scale||'').includes('1/100')).length;
+  const s144 = collectionData.filter(d => (d.scale||'').includes('1/144')).length;
+  const sOther = collectionData.filter(d => {
+    const sc = d.scale || '';
+    return !sc.includes('1/60') && !sc.includes('1/100') && !sc.includes('1/144');
+  }).length;
+
   document.getElementById('collectionTotal').textContent = total;
-  document.getElementById('collectionAvgRating').textContent = avgRating ? avgRating + ' ★' : '—';
-  document.getElementById('collectionTopRated').textContent = topRated && topRated.rating ? topRated.name : '—';
+  document.getElementById('collection60').textContent = s60;
+  document.getElementById('collection100').textContent = s100;
+  document.getElementById('collection144').textContent = s144;
+  document.getElementById('collectionOther').textContent = sOther;
 
   // Update view buttons
   const tableBtn = document.getElementById('collectionViewTable');
