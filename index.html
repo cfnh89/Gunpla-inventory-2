@@ -2371,6 +2371,7 @@ function renderTable() {
           <div class="backlog-card-units">QTY: ${d.units}</div>
         </div>
         <div class="backlog-card-actions">
+          <button class="btn btn-green btn-sm btn-icon" onclick="markAsBuilt('${d.id}')" title="Mark as Built — move to Collection">✓</button>
           <button class="btn btn-primary btn-sm btn-icon" onclick="openEditModal('${d.id}')" title="Edit">✎</button>
           <button class="btn btn-danger btn-sm btn-icon" onclick="deleteEntry('${d.id}')" title="Delete">✕</button>
         </div>
@@ -2409,6 +2410,7 @@ function renderTable() {
                 <td class="td-units" style="text-align:center">${d.units}</td>
                 <td class="td-price">RM ${parseFloat(d.price||0).toFixed(2)}</td>
                 <td class="td-actions"><div class="td-actions-inner">
+                  <button class="btn btn-green btn-sm btn-icon" onclick="markAsBuilt('${d.id}')" title="Mark as Built — move to Collection">✓</button>
                   <button class="btn btn-primary btn-sm btn-icon" onclick="openEditModal('${d.id}')" title="Edit">✎</button>
                   <button class="btn btn-danger btn-sm btn-icon" onclick="deleteEntry('${d.id}')" title="Delete">✕</button>
                 </div></td>
@@ -2493,6 +2495,31 @@ function deleteEntry(id) {
   save();
   renderTable();
   showToast('UNIT REMOVED');
+}
+
+function markAsBuilt(id) {
+  const entry = data.find(d => d.id === id);
+  if (!entry) return;
+  if (!confirm('Mark "' + (entry.model || 'this kit') + '" as BUILT and move it to My Collection?')) return;
+
+  // Add to collection
+  const maxNo = collectionData.reduce((m, d) => Math.max(m, d.no||0), 0);
+  collectionData.push({
+    id: genId(),
+    no: maxNo + 1,
+    brand: entry.brand || '',
+    scale: entry.scale || '',
+    name: entry.model || '',
+    rating: 0,
+    image: entry.image || null,
+  });
+  saveCollection();
+
+  // Remove from backlog
+  data = data.filter(d => d.id !== id);
+  save();
+  renderTable();
+  showToast('MOVED TO COLLECTION ✓');
 }
 
 // Excel
