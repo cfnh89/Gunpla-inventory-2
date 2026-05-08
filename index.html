@@ -1750,9 +1750,17 @@
         <div class="stat-label">// Pending</div>
         <div class="stat-value" id="preorderPending">0</div>
       </div>
-      <div class="stat-card green">
-        <div class="stat-label">// Total Value (MYR)</div>
+      <div class="stat-card cyan">
+        <div class="stat-label">// Total Price (MYR)</div>
         <div class="stat-value" id="preorderValue">0</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">// Total Paid (MYR)</div>
+        <div class="stat-value" id="preorderTotalPaid">0</div>
+      </div>
+      <div class="stat-card amber">
+        <div class="stat-label">// Balance Remaining (MYR)</div>
+        <div class="stat-value" id="preorderBalance">0</div>
       </div>
     </div>
 
@@ -3423,9 +3431,13 @@ function renderPreorders() {
   const total = preorderData.length;
   const pending = preorderData.filter(d => !d.arrived).length;
   const totalVal = preorderData.reduce((s, d) => s + (parseFloat(d.price)||0), 0);
+  const totalPaid = preorderData.reduce((s, d) => s + (parseFloat(d.paid)||0), 0);
+  const totalBalance = totalVal - totalPaid;
   document.getElementById('preorderTotal').textContent = total;
   document.getElementById('preorderPending').textContent = pending;
   document.getElementById('preorderValue').textContent = 'RM ' + totalVal.toFixed(2);
+  document.getElementById('preorderTotalPaid').textContent = 'RM ' + totalPaid.toFixed(2);
+  document.getElementById('preorderBalance').textContent = 'RM ' + totalBalance.toFixed(2);
 
   // Update view buttons
   const tableBtn = document.getElementById('preorderViewTable');
