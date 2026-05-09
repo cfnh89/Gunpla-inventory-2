@@ -1603,9 +1603,12 @@
         <option value="price-asc">Price (Low→High)</option>
       </select>
     </div>
+    <div class="toolbar-divider"></div>
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="searchInput" placeholder="SEARCH MODEL / BRAND..." oninput="renderTable()">
     </div>
-
-  <!-- BACKLOG CONTENT (table or cards) -->
+    </div>
   <div id="backlogContent"></div>
 
   <!-- TOTALS -->
@@ -1667,9 +1670,21 @@
           <option value="variant-desc">Variant (Z→A)</option>
         </select>
       </div>
+      <div class="toolbar-divider"></div>
+      <div class="toolbar-group">
+        <label class="sort-label">FILTER</label>
+        <select class="sort-select" id="qmsvFilter" onchange="renderQmsv()">
+          <option value="all">All</option>
+          <option value="owned">Owned</option>
+          <option value="missing">Not Owned</option>
+        </select>
+      </div>
+      <div class="toolbar-divider"></div>
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input type="text" id="qmsvSearch" placeholder="SEARCH SERIES / VARIANT..." oninput="renderQmsv()">
+      </div>
     </div>
-
-    <!-- QMSV STATS -->
     <div class="totals-bar" style="margin-bottom:20px;">
       <div class="stat-card cyan">
         <div class="stat-label">// Total Figures</div>
@@ -1737,6 +1752,20 @@
           <option value="balance-desc">Balance (High→Low)</option>
           <option value="seller-asc">Seller (A→Z)</option>
         </select>
+      </div>
+      <div class="toolbar-divider"></div>
+      <div class="toolbar-group">
+        <label class="sort-label">FILTER</label>
+        <select class="sort-select" id="preorderFilter" onchange="renderPreorders()">
+          <option value="all">All</option>
+          <option value="pending">Pending</option>
+          <option value="arrived">Arrived</option>
+        </select>
+      </div>
+      <div class="toolbar-divider"></div>
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input type="text" id="preorderSearch" placeholder="SEARCH MODEL / BRAND / SELLER..." oninput="renderPreorders()">
       </div>
     </div>
 
@@ -1810,6 +1839,11 @@
           <option value="rating-desc">Rating (High→Low)</option>
           <option value="rating-asc">Rating (Low→High)</option>
         </select>
+      </div>
+      <div class="toolbar-divider"></div>
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input type="text" id="collectionSearch" placeholder="SEARCH NAME / BRAND..." oninput="renderCollection()">
       </div>
     </div>
 
@@ -2339,7 +2373,12 @@ function setBacklogView(v) {
 }
 
 function renderTable() {
-  let rows = [...data];
+  const q = (document.getElementById('searchInput')?.value || '').toLowerCase();
+  let rows = q ? data.filter(d =>
+    (d.model||'').toLowerCase().includes(q) ||
+    (d.brand||'').toLowerCase().includes(q) ||
+    (d.scale||'').toLowerCase().includes(q)
+  ) : [...data];
 
   const p = parseSortVal('sortSelect', 'brand', 1);
   const s = parseSortVal('sortSelect2', null, 1);
@@ -3078,7 +3117,13 @@ function saveArrangement() {
 }
 
 function renderQmsv() {
-  let rows = [...qmsvData];
+  const qQ = (document.getElementById('qmsvSearch')?.value || '').toLowerCase();
+  const qF = document.getElementById('qmsvFilter')?.value || 'all';
+  let rows = qmsvData.filter(d => {
+    const matchQ = !qQ || (d.series||'').toLowerCase().includes(qQ) || (d.variant||'').toLowerCase().includes(qQ);
+    const matchF = qF === 'all' || (qF === 'owned' && d.owned) || (qF === 'missing' && !d.owned);
+    return matchQ && matchF;
+  });
 
   const p = parseSortVal('qmsvSort', 'series', 1);
   const s = parseSortVal('qmsvSort2', null, 1);
@@ -3403,7 +3448,13 @@ function buildPreorderRow(d, i) {
 }
 
 function renderPreorders() {
-  let rows = [...preorderData];
+  const pQ = (document.getElementById('preorderSearch')?.value || '').toLowerCase();
+  const pF = document.getElementById('preorderFilter')?.value || 'all';
+  let rows = preorderData.filter(d => {
+    const matchQ = !pQ || (d.model||'').toLowerCase().includes(pQ) || (d.brand||'').toLowerCase().includes(pQ) || (d.seller||'').toLowerCase().includes(pQ);
+    const matchF = pF === 'all' || (pF === 'arrived' && d.arrived) || (pF === 'pending' && !d.arrived);
+    return matchQ && matchF;
+  });
 
   const p = parseSortVal('preorderSort', null, 1);
   const s = parseSortVal('preorderSort2', null, 1);
@@ -3757,7 +3808,12 @@ function setCollectionRating(id, rating) {
 }
 
 function renderCollection() {
-  let rows = [...collectionData];
+  const cQ = (document.getElementById('collectionSearch')?.value || '').toLowerCase();
+  let rows = cQ ? collectionData.filter(d =>
+    (d.name||'').toLowerCase().includes(cQ) ||
+    (d.brand||'').toLowerCase().includes(cQ) ||
+    (d.scale||'').toLowerCase().includes(cQ)
+  ) : [...collectionData];
 
   const p = parseSortVal('collectionSort', 'no', 1);
   const s = parseSortVal('collectionSort2', null, 1);
