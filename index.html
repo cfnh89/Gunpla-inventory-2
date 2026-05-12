@@ -1538,6 +1538,9 @@
     <button class="page-tab" id="tabPreorder" onclick="switchPage('preorder')">
       ◈ PREORDERS
     </button>
+    <button class="page-tab" id="tabWishlist" onclick="switchPage('wishlist')">
+      ◈ WISHLIST
+    </button>
   </div>
 
   <!-- PAGE: BACKLOG -->
@@ -1876,7 +1879,131 @@
 
   </div> <!-- end pagCollection -->
 
+  <!-- PAGE: WISHLIST -->
+  <div id="pagWishlist" style="display:none;">
+
+    <!-- WISHLIST TOOLBAR -->
+    <div class="toolbar">
+      <div class="toolbar-group">
+        <button class="btn btn-primary" onclick="openWishlistAddModal()">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/></svg>
+          ADD TO WISHLIST
+        </button>
+      </div>
+      <div class="toolbar-divider"></div>
+      <div class="toolbar-group">
+        <label class="sort-label">VIEW</label>
+        <button class="btn btn-sm" id="wishlistViewTable" onclick="setWishlistView('table')" style="border-color:var(--accent-cyan);color:var(--accent-cyan);">☰ TABLE</button>
+        <button class="btn btn-sm" id="wishlistViewCard" onclick="setWishlistView('card')" style="border-color:var(--border-panel);color:var(--text-muted);">⊞ CARDS</button>
+      </div>
+      <div class="toolbar-divider"></div>
+      <div class="toolbar-group">
+        <label class="sort-label">SORT</label>
+        <select class="sort-select" id="wishlistSort" onchange="renderWishlist()" title="Primary sort">
+          <option value="no-asc">No. (Default)</option>
+          <option value="brand-asc">Brand (A→Z)</option>
+          <option value="brand-desc">Brand (Z→A)</option>
+          <option value="model-asc">Model (A→Z)</option>
+          <option value="model-desc">Model (Z→A)</option>
+          <option value="scale-asc">Scale (A→Z)</option>
+          <option value="price-asc">Price (Low→High)</option>
+          <option value="price-desc">Price (High→Low)</option>
+        </select>
+        <label class="sort-label" style="margin-left:4px;">THEN</label>
+        <select class="sort-select" id="wishlistSort2" onchange="renderWishlist()" title="Secondary sort">
+          <option value="none">—</option>
+          <option value="brand-asc">Brand (A→Z)</option>
+          <option value="brand-desc">Brand (Z→A)</option>
+          <option value="model-asc">Model (A→Z)</option>
+          <option value="model-desc">Model (Z→A)</option>
+          <option value="scale-asc">Scale (A→Z)</option>
+          <option value="price-asc">Price (Low→High)</option>
+          <option value="price-desc">Price (High→Low)</option>
+        </select>
+      </div>
+      <div class="toolbar-divider"></div>
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input type="text" id="wishlistSearch" placeholder="SEARCH MODEL / BRAND..." oninput="renderWishlist()">
+      </div>
+    </div>
+
+    <!-- WISHLIST STATS -->
+    <div class="totals-bar" style="margin-bottom:20px;">
+      <div class="stat-card cyan">
+        <div class="stat-label">// Total Wishes</div>
+        <div class="stat-value" id="wishlistTotal">0</div>
+      </div>
+      <div class="stat-card amber">
+        <div class="stat-label">// Est. Value (MYR)</div>
+        <div class="stat-value" id="wishlistValue">0</div>
+      </div>
+    </div>
+
+    <!-- WISHLIST CONTENT -->
+    <div id="wishlistContent"></div>
+
+  </div> <!-- end pagWishlist -->
+
 </div> <!-- end wrapper -->
+
+<!-- WISHLIST ADD/EDIT MODAL -->
+<div class="modal-backdrop" id="wishlistModal">
+  <div class="modal" style="max-width:520px;">
+    <div class="corner-deco tl"></div><div class="corner-deco tr"></div>
+    <div class="corner-deco bl"></div><div class="corner-deco br"></div>
+    <div class="modal-header">
+      <div class="modal-title" id="wishlistModalTitle">ADD TO WISHLIST</div>
+      <button class="modal-close" onclick="closeWishlistModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Brand</label>
+          <input class="form-input" type="text" id="wfBrand" list="wfBrandList" placeholder="e.g. Bandai">
+          <datalist id="wfBrandList"></datalist>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Scale</label>
+          <input class="form-input" type="text" id="wfScale" list="wfScaleList" placeholder="e.g. 1/144">
+          <datalist id="wfScaleList">
+            <option value="1/144"><option value="1/100"><option value="1/60"><option value="1/48"><option value="1/35"><option value="1/72"><option value="Non-Scale">
+          </datalist>
+        </div>
+        <div class="form-group form-full">
+          <label class="form-label">Model Name</label>
+          <input class="form-input" type="text" id="wfModel" list="wfModelList" placeholder="e.g. RX-78-2 Gundam Ver.Ka">
+          <datalist id="wfModelList"></datalist>
+        </div>
+        <div class="form-group form-full">
+          <label class="form-label">Est. Price (MYR)</label>
+          <input class="form-input" type="number" id="wfPrice" min="0" step="0.01" placeholder="0.00">
+        </div>
+        <div class="form-group form-full">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+            <label class="form-label">Image <span style="color:var(--text-muted);font-size:9px;letter-spacing:1px">(OPTIONAL)</span></label>
+            <button class="btn btn-primary btn-sm" id="wfAutoFindBtn" onclick="autoFindWishlistImage()" type="button" style="font-size:10px;padding:4px 10px;letter-spacing:1px;">
+              <span id="wfAutoFindBtnText">⚡ AUTO-FIND</span>
+            </button>
+          </div>
+          <div class="img-upload-area" id="wfImgUploadArea" onclick="document.getElementById('wfImage').click()">
+            <div class="img-upload-placeholder" id="wfImgPlaceholder">
+              <div style="font-size:22px;margin-bottom:6px;opacity:0.4">⊕</div>
+              <div>CLICK, DROP, OR PASTE IMAGE</div>
+            </div>
+            <img id="wfImgPreview" class="img-preview" src="" alt="preview" style="display:none">
+            <button class="img-clear-btn" id="wfImgClearBtn" onclick="clearWishlistImage(event)" style="display:none">✕</button>
+          </div>
+          <input type="file" id="wfImage" accept="image/*" style="display:none" onchange="handleWishlistImageUpload(event)">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeWishlistModal()" style="border-color:var(--border-panel);color:var(--text-secondary)">CANCEL</button>
+      <button class="btn btn-primary" onclick="saveWishlistEntry()">SAVE</button>
+    </div>
+  </div>
+</div>
 
 <!-- COLLECTION ADD/EDIT MODAL -->
 <div class="modal-backdrop" id="collectionModal">
@@ -2848,6 +2975,12 @@ function selectPickerImage(url) {
       document.getElementById('pfImgPreview').style.display = 'block';
       document.getElementById('pfImgPlaceholder').style.display = 'none';
       document.getElementById('pfImgClearBtn').style.display = 'flex';
+    } else if (pickerContext === 'wishlist') {
+      wishlistCurrentImage = dataUrl;
+      document.getElementById('wfImgPreview').src = dataUrl;
+      document.getElementById('wfImgPreview').style.display = 'block';
+      document.getElementById('wfImgPlaceholder').style.display = 'none';
+      document.getElementById('wfImgClearBtn').style.display = 'flex';
     } else if (pickerContext === 'collection') {
       collectionCurrentImage = dataUrl;
       document.getElementById('cfImgPreview').src = dataUrl;
@@ -2981,17 +3114,15 @@ async function gistPull(silent = false) {
       if (Array.isArray(pulled.qmsv)) { qmsvData = pulled.qmsv; saveQmsv(); }
       if (Array.isArray(pulled.preorders)) { preorderData = pulled.preorders; savePreorders(); }
       if (Array.isArray(pulled.collection)) { collectionData = pulled.collection; saveCollection(); }
+      if (Array.isArray(pulled.wishlist)) { wishlistData = pulled.wishlist; saveWishlist(); }
     } else { if (!silent) showToast('INVALID DATA FORMAT', true); return; }
 
-    renderTable();
-    renderQmsv();
-    renderPreorders();
-    renderCollection();
-    save(); saveQmsv(); savePreorders(); saveCollection();
+    renderTable(); renderQmsv(); renderPreorders(); renderCollection(); renderWishlist();
+    save(); saveQmsv(); savePreorders(); saveCollection(); saveWishlist();
     const b = document.getElementById('imagesBanner');
     if (b) b.style.display = 'none';
     if (!silent) closeSyncModal();
-    showToast('PULLED — ' + data.length + ' BACKLOG · ' + qmsvData.length + ' QMSV · ' + preorderData.length + ' PREORDERS · ' + collectionData.length + ' COLLECTION');
+    showToast('PULLED — ' + data.length + ' BACKLOG · ' + qmsvData.length + ' QMSV · ' + preorderData.length + ' PREORDERS · ' + collectionData.length + ' COLLECTION · ' + wishlistData.length + ' WISHLIST');
   } catch (err) { if (!silent) showToast(`PULL FAILED — ${err.message}`, true); }
 }
 
@@ -3000,7 +3131,7 @@ async function gistPush() {
   if (!token) { showToast('SET GITHUB TOKEN IN SETTINGS', true); openSettingsModal(); return; }
   showToast('PUSHING TO GIST...');
   const gistId = localStorage.getItem('gist_id');
-  const content = JSON.stringify({ backlog: data, qmsv: qmsvData, preorders: preorderData, collection: collectionData }, null, 2);
+  const content = JSON.stringify({ backlog: data, qmsv: qmsvData, preorders: preorderData, collection: collectionData, wishlist: wishlistData }, null, 2);
   const headers = {
     'Authorization': `Bearer ${token}`,
     'Accept': 'application/vnd.github+json',
@@ -3032,7 +3163,7 @@ async function gistPush() {
     if (gistInput) gistInput.value = json.id;
     updateSyncModalStatus();
     updateGithubStatus();
-    showToast('PUSHED — ' + data.length + ' BACKLOG · ' + qmsvData.length + ' QMSV · ' + preorderData.length + ' PREORDERS · ' + collectionData.length + ' COLLECTION');
+    showToast('PUSHED — ' + data.length + ' BACKLOG · ' + qmsvData.length + ' QMSV · ' + preorderData.length + ' PREORDERS · ' + collectionData.length + ' COLLECTION · ' + wishlistData.length + ' WISHLIST');
   } catch (err) { showToast(`PUSH FAILED — ${err.message}`, true); }
 }
 
@@ -3057,13 +3188,16 @@ function switchPage(page) {
   document.getElementById('pagBacklog').style.display = page === 'backlog' ? '' : 'none';
   document.getElementById('pagQmsv').style.display = page === 'qmsv' ? '' : 'none';
   document.getElementById('pagPreorder').style.display = page === 'preorder' ? '' : 'none';
+  document.getElementById('pagWishlist').style.display = page === 'wishlist' ? '' : 'none';
   document.getElementById('tabBacklog').classList.toggle('active', page === 'backlog');
   document.getElementById('tabQmsv').classList.toggle('active', page === 'qmsv');
   document.getElementById('tabPreorder').classList.toggle('active', page === 'preorder');
   document.getElementById('tabCollection').classList.toggle('active', page === 'collection');
+  document.getElementById('tabWishlist').classList.toggle('active', page === 'wishlist');
   if (page === 'qmsv') renderQmsv();
   if (page === 'preorder') renderPreorders();
   if (page === 'collection') renderCollection();
+  if (page === 'wishlist') renderWishlist();
 }
 
 // QMSV DATA
@@ -4093,11 +4227,309 @@ document.getElementById('collectionModal').addEventListener('click', function(e)
   if (e.target === this) closeCollectionModal();
 });
 
+// WISHLIST DATA
+let wishlistData = [];
+let wishlistEditId = null;
+let wishlistCurrentImage = null;
+let wishlistView = localStorage.getItem('wishlist_view') || 'table';
+const WISHLIST_STORAGE_KEY = 'gunpla_wishlist_v1';
+
+function loadWishlist() {
+  try {
+    const raw = localStorage.getItem(WISHLIST_STORAGE_KEY);
+    wishlistData = raw ? JSON.parse(raw) : [];
+  } catch { wishlistData = []; }
+}
+
+function saveWishlist() {
+  const slim = wishlistData.map(d => { const {image, ...rest} = d; return rest; });
+  try { localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(slim)); } catch(e) { console.warn('localStorage full:', e); }
+}
+
+function setWishlistView(v) {
+  wishlistView = v;
+  localStorage.setItem('wishlist_view', v);
+  const tableBtn = document.getElementById('wishlistViewTable');
+  const cardBtn = document.getElementById('wishlistViewCard');
+  if (tableBtn) { tableBtn.style.borderColor = v === 'table' ? 'var(--accent-cyan)' : 'var(--border-panel)'; tableBtn.style.color = v === 'table' ? 'var(--accent-cyan)' : 'var(--text-muted)'; }
+  if (cardBtn) { cardBtn.style.borderColor = v === 'card' ? 'var(--accent-cyan)' : 'var(--border-panel)'; cardBtn.style.color = v === 'card' ? 'var(--accent-cyan)' : 'var(--text-muted)'; }
+  renderWishlist();
+}
+
+function renderWishlist() {
+  const q = (document.getElementById('wishlistSearch')?.value || '').toLowerCase();
+  let rows = q ? wishlistData.filter(d =>
+    (d.model||'').toLowerCase().includes(q) || (d.brand||'').toLowerCase().includes(q) || (d.scale||'').toLowerCase().includes(q)
+  ) : [...wishlistData];
+
+  const p = parseSortVal('wishlistSort', 'no', 1);
+  const s = parseSortVal('wishlistSort2', null, 1);
+  multiSort(rows, p.key || 'no', p.dir, s.key, s.dir);
+
+  const total = wishlistData.length;
+  const totalVal = wishlistData.reduce((sum, d) => sum + (parseFloat(d.price)||0), 0);
+  document.getElementById('wishlistTotal').textContent = total;
+  document.getElementById('wishlistValue').textContent = 'RM ' + totalVal.toFixed(2);
+
+  // Update view buttons
+  const tableBtn = document.getElementById('wishlistViewTable');
+  const cardBtn = document.getElementById('wishlistViewCard');
+  if (tableBtn) { tableBtn.style.borderColor = wishlistView === 'table' ? 'var(--accent-cyan)' : 'var(--border-panel)'; tableBtn.style.color = wishlistView === 'table' ? 'var(--accent-cyan)' : 'var(--text-muted)'; }
+  if (cardBtn) { cardBtn.style.borderColor = wishlistView === 'card' ? 'var(--accent-cyan)' : 'var(--border-panel)'; cardBtn.style.color = wishlistView === 'card' ? 'var(--accent-cyan)' : 'var(--text-muted)'; }
+
+  const content = document.getElementById('wishlistContent');
+  const emptyHtml = '<div class="empty-state" style="padding:60px 20px;text-align:center;"><div class="empty-icon">◈</div><div class="empty-text">NO ITEMS IN WISHLIST // ADD ONE TO BEGIN</div></div>';
+
+  if (wishlistView === 'card') {
+    if (rows.length === 0) { content.innerHTML = emptyHtml; return; }
+    content.innerHTML = '<div class="backlog-card-grid">'
+      + rows.map((d, i) =>
+        '<div class="backlog-card">'
+        + '<div class="backlog-card-no">' + String(i+1).padStart(3,'0') + '</div>'
+        + (d.image ? '<img class="backlog-card-img" src="' + d.image + '" onclick="openWishlistImageViewer(\'' + d.id + '\')">' : '<div class="backlog-card-no-img">◈</div>')
+        + '<div class="backlog-card-body">'
+        + '<div class="backlog-card-brand"><span class="brand-pill ' + getBrandClass(d.brand) + '">' + escHtml(d.brand||'—') + '</span></div>'
+        + '<div class="backlog-card-model">' + escHtml(d.model||'—') + '</div>'
+        + '<div class="backlog-card-meta"><span class="backlog-card-scale">' + escHtml(d.scale||'') + '</span>'
+        + (d.price ? '<span class="backlog-card-price">RM ' + parseFloat(d.price).toFixed(2) + '</span>' : '') + '</div>'
+        + '</div>'
+        + '<div class="backlog-card-actions">'
+        + '<button class="btn btn-amber btn-sm btn-icon" onclick="moveWishlistToBacklog(\'' + d.id + '\')" title="Move to Backlog">→</button>'
+        + '<button class="btn btn-primary btn-sm btn-icon" onclick="openWishlistEditModal(\'' + d.id + '\')" title="Edit">✎</button>'
+        + '<button class="btn btn-danger btn-sm btn-icon" onclick="deleteWishlistEntry(\'' + d.id + '\')" title="Delete">✕</button>'
+        + '</div></div>'
+      ).join('') + '</div>';
+    return;
+  }
+
+  // Table view
+  const emptyRow = '<tr><td colspan="7">' + emptyHtml + '</td></tr>';
+  const tbody = rows.length === 0 ? emptyRow : rows.map((d, i) =>
+    '<tr>'
+    + '<td class="td-no">' + String(i+1).padStart(3,'0') + '</td>'
+    + '<td class="td-thumb">' + (d.image ? '<img src="' + d.image + '" class="row-thumb" onclick="openWishlistImageViewer(\'' + d.id + '\')">' : '<div class="row-thumb-empty">◈</div>') + '</td>'
+    + '<td><span class="brand-pill ' + getBrandClass(d.brand) + '">' + escHtml(d.brand||'—') + '</span></td>'
+    + '<td class="td-model">' + escHtml(d.model||'—') + '</td>'
+    + '<td class="td-scale">' + escHtml(d.scale||'—') + '</td>'
+    + '<td class="td-price">RM ' + parseFloat(d.price||0).toFixed(2) + '</td>'
+    + '<td class="td-actions"><div class="td-actions-inner">'
+    + '<button class="btn btn-amber btn-sm" onclick="moveWishlistToBacklog(\'' + d.id + '\')" title="Move to Backlog" style="font-size:10px;letter-spacing:1px;padding:5px 8px;">→ BACKLOG</button>'
+    + '<button class="btn btn-primary btn-sm btn-icon" onclick="openWishlistEditModal(\'' + d.id + '\')" title="Edit">✎</button>'
+    + '<button class="btn btn-danger btn-sm btn-icon" onclick="deleteWishlistEntry(\'' + d.id + '\')" title="Delete">✕</button>'
+    + '</div></td></tr>'
+  ).join('');
+
+  content.innerHTML =
+    '<div class="table-panel" style="position:relative;margin-bottom:20px;">'
+    + '<div class="corner-deco tl"></div><div class="corner-deco tr"></div>'
+    + '<div class="corner-deco bl"></div><div class="corner-deco br"></div>'
+    + '<div class="table-header"><div class="table-title">// WISHLIST</div>'
+    + '<div class="table-count">' + rows.length + ' / ' + total + ' ITEMS</div></div>'
+    + '<div class="table-wrap"><table class="data-table"><thead><tr>'
+    + '<th class="td-no">#</th><th style="width:80px"></th>'
+    + '<th>BRAND</th><th>MODEL</th><th>SCALE</th>'
+    + '<th style="text-align:right">PRICE (MYR)</th>'
+    + '<th style="text-align:right">ACTIONS</th>'
+    + '</tr></thead><tbody>' + tbody + '</tbody></table></div></div>';
+}
+
+function populateWishlistSuggestions() {
+  const brands = [...new Set([...data.map(d => d.brand), ...wishlistData.map(d => d.brand), ...collectionData.map(d => d.brand)].filter(Boolean))].sort();
+  const models = [...new Set([...data.map(d => d.model), ...wishlistData.map(d => d.model)].filter(Boolean))].sort();
+  const dlBrand = document.getElementById('wfBrandList');
+  const dlModel = document.getElementById('wfModelList');
+  if (dlBrand) dlBrand.innerHTML = brands.map(b => '<option value="' + escHtml(b) + '">').join('');
+  if (dlModel) dlModel.innerHTML = models.map(m => '<option value="' + escHtml(m) + '">').join('');
+}
+
+function openWishlistAddModal() {
+  wishlistEditId = null;
+  document.getElementById('wishlistModalTitle').textContent = 'ADD TO WISHLIST';
+  document.getElementById('wfBrand').value = '';
+  document.getElementById('wfScale').value = '';
+  document.getElementById('wfModel').value = '';
+  document.getElementById('wfPrice').value = '';
+  populateWishlistSuggestions();
+  resetWishlistImageUI(null);
+  document.getElementById('wishlistModal').classList.add('open');
+}
+
+function openWishlistEditModal(id) {
+  const entry = wishlistData.find(d => d.id === id);
+  if (!entry) return;
+  wishlistEditId = id;
+  document.getElementById('wishlistModalTitle').textContent = 'EDIT WISHLIST ITEM';
+  document.getElementById('wfBrand').value = entry.brand || '';
+  document.getElementById('wfScale').value = entry.scale || '';
+  document.getElementById('wfModel').value = entry.model || '';
+  document.getElementById('wfPrice').value = entry.price || '';
+  populateWishlistSuggestions();
+  resetWishlistImageUI(entry.image || null);
+  document.getElementById('wishlistModal').classList.add('open');
+}
+
+function closeWishlistModal() { document.getElementById('wishlistModal').classList.remove('open'); }
+
+function saveWishlistEntry() {
+  const model = document.getElementById('wfModel').value.trim();
+  if (!model) { showToast('MODEL NAME IS REQUIRED', true); return; }
+  const entry = {
+    brand: document.getElementById('wfBrand').value.trim(),
+    scale: document.getElementById('wfScale').value.trim(),
+    model,
+    price: parseFloat(document.getElementById('wfPrice').value) || 0,
+    image: wishlistCurrentImage || null,
+  };
+  if (wishlistEditId) {
+    const idx = wishlistData.findIndex(d => d.id === wishlistEditId);
+    if (idx !== -1) wishlistData[idx] = { ...wishlistData[idx], ...entry };
+    showToast('WISHLIST ITEM UPDATED');
+  } else {
+    const maxNo = wishlistData.reduce((m, d) => Math.max(m, d.no||0), 0);
+    wishlistData.push({ id: genId(), no: maxNo + 1, ...entry });
+    showToast('ADDED TO WISHLIST');
+  }
+  saveWishlist();
+  renderWishlist();
+  closeWishlistModal();
+}
+
+function deleteWishlistEntry(id) {
+  if (!confirm('Remove this item from your wishlist?')) return;
+  wishlistData = wishlistData.filter(d => d.id !== id);
+  saveWishlist();
+  renderWishlist();
+  showToast('ITEM REMOVED');
+}
+
+function moveWishlistToBacklog(id) {
+  const entry = wishlistData.find(d => d.id === id);
+  if (!entry) return;
+  if (!confirm('Move "' + (entry.model||'this kit') + '" to the Backlog?')) return;
+  const maxNo = data.reduce((m, d) => Math.max(m, d.no||0), 0);
+  data.push({
+    id: genId(),
+    no: maxNo + 1,
+    brand: entry.brand || '',
+    model: entry.model || '',
+    scale: entry.scale || '',
+    units: 1,
+    price: entry.price || 0,
+    image: entry.image || null,
+  });
+  save();
+  wishlistData = wishlistData.filter(d => d.id !== id);
+  saveWishlist();
+  renderWishlist();
+  showToast('MOVED TO BACKLOG');
+}
+
+function openWishlistImageViewer(id) {
+  const entry = wishlistData.find(d => d.id === id);
+  if (!entry || !entry.image) return;
+  document.getElementById('imgViewerImg').src = entry.image;
+  document.getElementById('imgViewer').classList.add('open');
+}
+
+function resetWishlistImageUI(existingImage = null) {
+  wishlistCurrentImage = existingImage;
+  const preview = document.getElementById('wfImgPreview');
+  const placeholder = document.getElementById('wfImgPlaceholder');
+  const clearBtn = document.getElementById('wfImgClearBtn');
+  document.getElementById('wfImage').value = '';
+  if (existingImage) {
+    preview.src = existingImage; preview.style.display = 'block';
+    placeholder.style.display = 'none'; clearBtn.style.display = 'flex';
+  } else {
+    preview.src = ''; preview.style.display = 'none';
+    placeholder.style.display = 'block'; clearBtn.style.display = 'none';
+  }
+}
+
+function handleWishlistImageUpload(evt) {
+  const file = evt.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 400; const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale); canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+      wishlistCurrentImage = dataUrl;
+      document.getElementById('wfImgPreview').src = dataUrl;
+      document.getElementById('wfImgPreview').style.display = 'block';
+      document.getElementById('wfImgPlaceholder').style.display = 'none';
+      document.getElementById('wfImgClearBtn').style.display = 'flex';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearWishlistImage(e) { e.stopPropagation(); resetWishlistImageUI(null); }
+
+async function autoFindWishlistImage() {
+  const model = document.getElementById('wfModel').value.trim();
+  const brand = document.getElementById('wfBrand').value.trim();
+  const scale = document.getElementById('wfScale').value.trim();
+  if (!model) { showToast('ENTER MODEL NAME FIRST', true); return; }
+  const workerUrl = localStorage.getItem('worker_url');
+  if (!workerUrl) { showToast('ADD WORKER URL IN SETTINGS FIRST', true); openSettingsModal(); return; }
+  const btn = document.getElementById('wfAutoFindBtn');
+  const btnText = document.getElementById('wfAutoFindBtnText');
+  btn.disabled = true; btnText.textContent = '⟳ SEARCHING...';
+  const query = [brand, scale, model, 'model kit box art'].filter(Boolean).join(' ');
+  try {
+    const res = await fetch(workerUrl.replace(/\/$/, '') + '?q=' + encodeURIComponent(query));
+    if (!res.ok) throw new Error();
+    const json = await res.json();
+    const urls = (json.images || []).map(img => img.url).filter(Boolean);
+    if (!urls.length) throw new Error();
+    openImagePicker(urls, 'wishlist');
+  } catch { showToast('SEARCH FAILED', true); }
+  finally { btn.disabled = false; btnText.textContent = '⚡ AUTO-FIND'; }
+}
+
+document.addEventListener('paste', e => {
+  const modal = document.getElementById('wishlistModal');
+  if (!modal.classList.contains('open')) return;
+  const items = (e.clipboardData || e.originalEvent?.clipboardData)?.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type.startsWith('image/')) {
+      e.preventDefault();
+      const file = item.getAsFile();
+      if (file) handleWishlistImageUpload({ target: { files: [file] } });
+      break;
+    }
+  }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const area = document.getElementById('wfImgUploadArea');
+  if (!area) return;
+  area.addEventListener('dragover', e => { e.preventDefault(); area.classList.add('drag-over'); });
+  area.addEventListener('dragleave', () => area.classList.remove('drag-over'));
+  area.addEventListener('drop', e => {
+    e.preventDefault(); area.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) handleWishlistImageUpload({ target: { files: [file] } });
+  });
+});
+
+document.getElementById('wishlistModal').addEventListener('click', function(e) {
+  if (e.target === this) closeWishlistModal();
+});
+
 load();
 data = data.map((d, i) => ({ no: i + 1, ...d }));
 loadQmsv();
 loadPreorders();
 loadCollection();
+loadWishlist();
 updateGithubStatus();
 renderTable();
 checkImagesBanner();
