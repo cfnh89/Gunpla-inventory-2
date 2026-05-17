@@ -2119,7 +2119,8 @@
         </div>
         <div class="form-group form-full">
           <label class="form-label">Seller</label>
-          <input class="form-input" type="text" id="pfSeller" placeholder="e.g. HobbyLink Japan, Lazada...">
+          <input class="form-input" type="text" id="pfSeller" list="pfSellerList" placeholder="e.g. HobbyLink Japan, Lazada...">
+          <datalist id="pfSellerList"></datalist>
         </div>
         <div class="form-group form-full" style="display:flex;align-items:center;gap:14px;padding:6px 0;">
           <label class="form-label" style="margin:0;">Status</label>
@@ -3528,6 +3529,12 @@ function populatePreorderModelList() {
   if (dl) dl.innerHTML = all.map(m => `<option value="${escHtml(m)}">`).join('');
 }
 
+function populatePreorderSellerList() {
+  const sellers = [...new Set(preorderData.map(d => d.seller).filter(Boolean))].sort();
+  const dl = document.getElementById('pfSellerList');
+  if (dl) dl.innerHTML = sellers.map(s => '<option value="' + escHtml(s) + '">').join('');
+}
+
 function buildPreorderCard(d) {
   const balance = parseFloat(d.price||0) - parseFloat(d.paid||0);
   const imgHtml = d.image
@@ -3679,11 +3686,8 @@ function openPreorderAddModal() {
   document.getElementById('pfSeller').value = '';
   document.getElementById('pfArrived').checked = false;
   populatePreorderModelList();
+  populatePreorderSellerList();
   resetPreorderImageUI(null);
-  document.getElementById('preorderModal').classList.add('open');
-}
-
-function openPreorderEditModal(id) {
   const entry = preorderData.find(d => d.id === id);
   if (!entry) return;
   preorderEditId = id;
@@ -3698,6 +3702,7 @@ function openPreorderEditModal(id) {
   document.getElementById('pfSeller').value = entry.seller || '';
   document.getElementById('pfArrived').checked = !!entry.arrived;
   populatePreorderModelList();
+  populatePreorderSellerList();
   resetPreorderImageUI(entry.image || null);
   document.getElementById('preorderModal').classList.add('open');
 }
