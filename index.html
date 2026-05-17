@@ -3688,6 +3688,10 @@ function openPreorderAddModal() {
   populatePreorderModelList();
   populatePreorderSellerList();
   resetPreorderImageUI(null);
+  document.getElementById('preorderModal').classList.add('open');
+}
+
+function openPreorderEditModal(id) {
   const entry = preorderData.find(d => d.id === id);
   if (!entry) return;
   preorderEditId = id;
