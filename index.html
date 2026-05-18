@@ -738,10 +738,149 @@
 
   .table-wrap { overflow-x: auto; }
 
+  /* ============================================
+     MOBILE OPTIMISATION (max-width: 768px)
+     ============================================ */
   @media (max-width: 768px) {
+
+    /* WRAPPER */
+    .wrapper { padding: 0 12px 60px; }
+
+    /* HEADER */
+    header {
+      padding: 14px 0 14px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .logo-block { gap: 10px; }
+    .logo-block img { width: 48px !important; height: 48px !important; }
+    .logo-main { font-size: 20px; letter-spacing: 3px; }
+    .logo-sub { font-size: 9px; letter-spacing: 2px; }
+
+    .header-decoration { display: none; }
+
+    .system-status { display: none; }
+
+    header > div:last-child { margin-left: auto; }
+    header > div:last-child .btn { padding: 6px 10px; font-size: 11px; letter-spacing: 1px; }
+
+    /* PAGE TABS */
+    .page-nav {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      white-space: nowrap;
+      display: flex;
+      margin-bottom: 16px;
+    }
+    .page-nav::-webkit-scrollbar { display: none; }
+
+    .page-tab {
+      font-size: 11px;
+      padding: 10px 14px;
+      letter-spacing: 1px;
+      flex-shrink: 0;
+    }
+
+    /* TOOLBAR */
+    .toolbar {
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 10px 0;
+    }
+
+    .toolbar-divider { display: none; }
+
+    .toolbar-group {
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .btn { font-size: 11px; padding: 8px 12px; letter-spacing: 1px; }
+    .btn-sm { font-size: 10px; padding: 6px 8px; }
+    .btn-icon { width: 34px; height: 34px; }
+
+    .sort-label { font-size: 9px; }
+    .sort-select { font-size: 11px; padding: 6px 8px; max-width: 130px; }
+
+    .search-wrap { min-width: 100%; }
+    .search-wrap input { font-size: 12px; }
+
+    /* STATS BAR */
+    .totals-bar {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .stat-card { padding: 12px 14px; }
+    .stat-value { font-size: 20px; }
+    .stat-label { font-size: 9px; }
+
+    /* TABLE — hide on mobile, show cards instead */
+    .mobile-hide-table .table-panel { display: none; }
+
+    /* DATA TABLE tweaks for horizontal scroll */
+    .data-table { font-size: 12px; }
+    .data-table thead th { padding: 8px 10px; font-size: 10px; }
+    .data-table tbody td { padding: 10px 10px; }
+
+    .td-scale { display: none; }
+    .row-thumb { width: 48px; height: 48px; }
+    .td-thumb { width: 60px; padding: 6px 6px !important; }
+
+    /* CARD GRIDS */
+    .backlog-card-grid,
+    .collection-card-grid,
+    .preorder-card-grid,
+    .qmsv-card-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+
+    .backlog-card-model,
+    .collection-card-name { font-size: 12px; }
+    .backlog-card-price { font-size: 11px; }
+
+    /* QMSV LIST ROWS */
+    .qmsv-row { padding: 12px 12px; gap: 10px; }
+    .qmsv-thumb-small { width: 52px; height: 52px; }
+    .qmsv-row-name { font-size: 16px; }
+    .qmsv-check { width: 26px; height: 26px; }
+
+    /* PREORDER TABLE — show fewer columns */
+    .po-hide-mobile { display: none; }
+
+    /* MODAL */
+    .modal { margin: 10px; max-width: calc(100vw - 20px) !important; }
+    .modal-body { padding: 14px 16px; }
+    .modal-header { padding: 14px 16px 12px; }
+    .modal-footer { padding: 12px 16px 16px; gap: 8px; }
+    .modal-title { font-size: 14px; letter-spacing: 2px; }
     .form-grid { grid-template-columns: 1fr; }
-    .toolbar { gap: 8px; }
-    .logo-main { font-size: 24px; }
+    .form-input, .form-select { font-size: 14px; padding: 10px 12px; }
+    .form-label { font-size: 10px; }
+
+    /* SYNC MODAL */
+    .sync-tabs button { font-size: 11px; padding: 10px 12px; }
+
+    /* STAR RATING */
+    .star-rating .star { font-size: 22px; }
+    .rating-star { font-size: 32px !important; }
+
+    /* IMAGE UPLOAD */
+    .img-upload-area { min-height: 80px; }
+
+    /* TOAST */
+    .toast { right: 12px; left: 12px; bottom: 16px; font-size: 11px; }
+
+    /* LOGO TEXT stacks nicely */
+    .logo-text { gap: 1px; }
+  }
+
+  /* Extra small phones */
+  @media (max-width: 400px) {
+    .backlog-card-grid,
+    .collection-card-grid,
+    .preorder-card-grid { grid-template-columns: 1fr; }
+    .logo-main { font-size: 16px; letter-spacing: 2px; }
   }
 
   /* IMAGE UPLOAD */
@@ -3576,11 +3715,11 @@ function buildPreorderRow(d, i) {
     + '<td class="td-thumb">' + imgCell + '</td>'
     + '<td><span class="brand-pill ' + getBrandClass(d.brand) + '">' + escHtml(d.brand||'—') + '</span></td>'
     + '<td class="td-model">' + escHtml(d.model||'—') + '</td>'
-    + '<td class="po-eta">' + (d.eta ? formatEta(d.eta) : '—') + '</td>'
+    + '<td class="po-eta po-hide-mobile">' + (d.eta ? formatEta(d.eta) : '—') + '</td>'
     + '<td class="td-price">RM ' + parseFloat(d.price||0).toFixed(2) + '</td>'
-    + '<td class="td-price" style="color:var(--accent-green);">RM ' + parseFloat(d.paid||0).toFixed(2) + '</td>'
+    + '<td class="td-price po-hide-mobile" style="color:var(--accent-green);">RM ' + parseFloat(d.paid||0).toFixed(2) + '</td>'
     + '<td class="td-price" style="color:' + balColor + ';">RM ' + balance.toFixed(2) + '</td>'
-    + '<td class="po-seller">' + escHtml(d.seller||'—') + '</td>'
+    + '<td class="po-seller po-hide-mobile">' + escHtml(d.seller||'—') + '</td>'
     + '<td><span class="' + (d.arrived ? 'po-status-arrived' : 'po-status-pending') + '" style="cursor:pointer;" onclick="togglePreorderArrived(\'' + d.id + '\')" title="Toggle status">' + (d.arrived ? 'ARRIVED' : 'PENDING') + '</span></td>'
     + '<td class="td-actions"><div class="td-actions-inner">'
     + '<button class="btn btn-primary btn-sm btn-icon" onclick="openPreorderEditModal(\'' + d.id + '\')" title="Edit">✎</button>'
@@ -4542,6 +4681,14 @@ loadWishlist();
 updateGithubStatus();
 renderTable();
 checkImagesBanner();
+
+// Auto-switch to card view on mobile
+if (window.innerWidth <= 768) {
+  if (backlogView === 'table') { backlogView = 'card'; localStorage.setItem('backlog_view', 'card'); }
+  if (collectionView === 'table') { collectionView = 'card'; localStorage.setItem('collection_view', 'card'); }
+  if (preorderView === 'table') { preorderView = 'card'; localStorage.setItem('preorder_view', 'card'); }
+  if (wishlistView === 'table') { wishlistView = 'card'; localStorage.setItem('wishlist_view', 'card'); }
+}
 
 // Auto-pull from Gist on page load if credentials are present
 (async () => {
